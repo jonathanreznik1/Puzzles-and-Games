@@ -1,51 +1,124 @@
 from PyQt6.QtWidgets import *
 
-#New python project 8 queens problem
+# python 8 queens problem
 
-# 1. Data structures board - positional elements
-class boardgame():
+class Board():
     def __init__(self, grid_size):
+        self.board = self.board_structure(grid_size)
         self.grid_size = grid_size
-        self.board = self.new_board_structure(grid_size)
 
-    def new_board_structure(self,grid_size):
+    def board_structure(self,size):
         board = []
-        #with alphabet list
-        alpha = ['a','b','c','d','e','f','g','h']
-        #with byte string
-        # ch = bytes('A', 'utf-8')
-        for files in range(grid_size):
-            # ch = bytes(ch[0]+1)
+        file = 'A'
+        for i in range(size):
             board.append([])
-            for ranks in range(grid_size):
-                val = alpha[files] + str(ranks+1)
-                # val = str(ch.decode("utf-8")) + str('M')
-                board[files].append(val)
+            rank = 1
+            if i > 0:
+                file = chr(ord(file) + 1)
+            for j in range(size):
+                if j > 0:
+                    rank += 1
+                board[i].append(Chesssquare(file,str(rank)))
         return board
 
-    def place_queen(self,file,rank):
-        self.board[file][rank] = 'q'
+    # TODO: need to work on this function for algorithm for checking solution goes here
+    # separate functional solutions for different algorithms such as backtracking and brute force
+    def board_solved(self):
+        return True
+    
+    def __repr__(self):
+        return "this is __repr__"
+
+class Chesssquare():
+    def __init__(self, file, rank):
+        self.file = file
+        self.rank = rank
+        self.piece = None
 
     def __str__(self):
-        mystring=' '.join(map(str,self.board))
-        return mystring
+        return "%s%s\t" % (self.file, self.rank)
 
-# def check_board():
-
-def winning_board():
-    # recursive or iterative solution
-
-def new_game():
-    global b
-    b = boardgame(8)
+    # def __str__(self,a):
+    #     return "%s%s-%s" % (self.file, self.rank, self.piece)
     
-    #gather some basic information about the user such as name and skill leve, etc.
-    username = input("Name:")
-    difficulty = input("Difficulty (easy, medium, difficult)") 
 
-board = new_game()
-b.place_queen(1,1)
-print(b)
+# class Gamepiece():
+#     global piece
+#     def __init__(self, piece_type):
+#         self.piece_type = piece_type
+    
+#     def place_piece(self, file, rank):
+#         board[file][rank] = self
+
+#     def __str__(self):
+#         return "piece"
+
+class Game(Board):
+    def __init__(self, size, type):
+        super().__init__(size)
+        self.game = type
+        self.board = self.board_structure(size)
+
+    def __repr__(self):
+        my_board_repr = ""
+        for i in range(self.grid_size):
+            for j in range(self.grid_size):
+                 my_board_repr += str(self.board[i][j])
+                #  "this is __repr__"
+        return my_board_repr
+
+def main():
+    b = Game(4,"queens")
+
+    # user input/output for game start
+    #choice = input()
+    # board = new_game(game_type,game_difficulty_interactive)
+    # b.place_queen(1,1)
+    # b.place_queen(0,0)
+    print(b)
+    # print(b.board)
+    # print(b.board[0])
+
+main()
+
+# class queen(boardpiece):
+#     def __init__(self, piece_type):
+#         super().__init__(piece_type)
+
+#     def place_queen(self,file,rank):
+#         self.board[file][rank] = 'q'
+
+
+# def printSolution(board):
+#     for i in range(N):
+#         for j in range(N):
+#             print(board[i][j], end = " ")
+#         print()
+
+    # define options for entering queen position by rank/file, rank or file
+    # input/output with error handling
+
+
+   # def board_Nqueens(self,n):
+    #     self.board_structure(n)
+
+    #     result = []
+    #     #with alphabet list
+    #     start = ord('A')
+    #     files = []
+    #     for i in range(grid):
+    #         files.append(chr(start + i))
+    #     for file in files:
+    #         result.append([])
+    #         for ranks in range(grid):
+    #             val = file + str(ranks+1)
+    #             result[ord(file)-ord('A')].append(val)
+    #     return result
+    
+    # def new_board_game(board):
+    #     dict
+
+
 #  b. pieces - object
 
 # 2. Functions 
