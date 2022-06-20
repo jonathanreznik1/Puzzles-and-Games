@@ -1,16 +1,22 @@
-import PyQt6
 import sys
 
-if 'PyQt6' in sys.modules:
-    # PyQt6
+try:
     from PyQt6 import QtGui, QtWidgets, QtCore
     from PyQt6.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
-
-
-else:
-    # PySide6
+except ImportError:
     from PySide6 import QtGui, QtWidgets, QtCore
     from PySide6.QtCore import Signal, Slot
+
+#if 'PyQt6' in sys.modules:
+#   # PyQt6
+#    from PyQt6 import QtGui, QtWidgets, QtCore
+#    from PyQt6.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
+#
+#
+#else:
+#    # PySide6
+#    from PySide6 import QtGui, QtWidgets, QtCore
+#    from PySide6.QtCore import Signal, Slot
 
 
 def _enum(obj, name):
