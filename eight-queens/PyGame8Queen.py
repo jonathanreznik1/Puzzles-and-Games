@@ -4,22 +4,23 @@ from PyQt6.QtWidgets import *
 
 class Board():
     def __init__(self, grid_size):
-        self.board = self.board_structure(grid_size)
+        global board
+        board = self.board_structure(grid_size)
         self.grid_size = grid_size
 
     def board_structure(self,size):
-        board = []
+        brd = []
         file = 'A'
         for i in range(size):
-            board.append([])
+            brd.append([])
             rank = 1
             if i > 0:
                 file = chr(ord(file) + 1)
             for j in range(size):
                 if j > 0:
                     rank += 1
-                board[i].append(Chesssquare(file,str(rank)))
-        return board
+                brd[i].append(Chesssquare(file,str(rank)))
+        return brd
 
     # TODO: need to work on this function for algorithm for checking solution goes here
     # separate functional solutions for different algorithms such as backtracking and brute force
@@ -36,39 +37,57 @@ class Chesssquare():
         self.piece = None
 
     def __str__(self):
-        return "%s%s\t" % (self.file, self.rank)
+        if self.piece is not None:
+            return "%s\t" % (self.piece)
+        else:
+            return "%s%s\t" % (self.file, self.rank)
 
-    # def __str__(self,a):
+    # def __str__(self,debug):
     #     return "%s%s-%s" % (self.file, self.rank, self.piece)
     
 
-# class Gamepiece():
-#     global piece
-#     def __init__(self, piece_type):
-#         self.piece_type = piece_type
+class Gamepiece():
+    def __init__(self, type, file, rank):
+        self.piece_type = type
+        self.piece_location = self.place_piece(file, rank)
     
-#     def place_piece(self, file, rank):
-#         board[file][rank] = self
+    def place_piece(self, file, rank):
+        board[file][rank].piece = self
+        return file,rank
 
-#     def __str__(self):
-#         return "piece"
+    def at_square(self):
+        return ''.join(map(str,self.piece_location))
+
+    def __str__(self):
+        return self.piece_type
+
+class Queen(Gamepiece):
+    def __init__(self,f,r):
+        super().__init__("Qu",f,r)
+    
+    # def move_piece():
+
+    # def lglmove():
+
 
 class Game(Board):
     def __init__(self, size, type):
         super().__init__(size)
         self.game = type
-        self.board = self.board_structure(size)
+        board = self.board_structure(size)
 
     def __repr__(self):
         my_board_repr = ""
         for i in range(self.grid_size):
             for j in range(self.grid_size):
-                 my_board_repr += str(self.board[i][j])
+                 my_board_repr += str(board[i][j])
                 #  "this is __repr__"
         return my_board_repr
 
 def main():
     b = Game(4,"queens")
+    p1 = Queen(0,0)
+    p2 = Queen(2,3)
 
     # user input/output for game start
     #choice = input()
@@ -76,6 +95,8 @@ def main():
     # b.place_queen(1,1)
     # b.place_queen(0,0)
     print(b)
+    print(p1.at_square())
+    print(p2.at_square())
     # print(b.board)
     # print(b.board[0])
 
