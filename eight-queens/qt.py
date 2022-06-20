@@ -1,3 +1,4 @@
+import PyQt6
 import sys
 
 if 'PyQt6' in sys.modules:
