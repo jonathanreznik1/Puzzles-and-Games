@@ -26,19 +26,6 @@ class Board():
             for j in range(grid):
                 board[i][j] = (Chesssquare(i,j))
 
-    # def board_structure(self,size):
-    #     brd = []
-    #     file = 'A'
-    #     for i in range(size):
-    #         brd.append([])
-    #         rank = 1
-    #         if i > 0:
-    #             file = chr(ord(file) + 1)
-    #         for j in range(size):
-    #             if j > 0:
-    #                 rank += 1
-    #             brd[i].append(Chesssquare(file,str(rank)))
-    #     return brd
 
     # TODO: need to work on this function for algorithm for checking solution goes here
     # separate functional solutions for different algorithms such as backtracking and brute force
@@ -46,7 +33,16 @@ class Board():
         return True
     
     def __repr__(self):
-        return "this is __repr__"
+        print("Board __repr was called")
+        my_board_repr = "Board:\n"
+        for i in range(grid):
+            for j in range(grid):
+                my_board_repr += str(board[i][j])
+                if j is (grid - 1):
+                    my_board_repr += "\n"
+                #  "this is __repr__"
+        return my_board_repr
+
 
 class Chesssquare():
     def __init__(self, file, rank):
@@ -130,6 +126,7 @@ class Game(Board):
             board = self.make_chess_board()
 
     def game_summary(self):
+        #TODO: limit to the moves that were made with move history
         summary = "Game summary:\n"
         for i in range(grid):
             for j in range(grid):
@@ -140,14 +137,23 @@ class Game(Board):
         return summary
 
     def __repr__(self):
-        my_board_repr = "Board:\n"
+        board_repr = Board.__repr__(self)
+        #flag for printing board or not
+        if True:
+            print(board_repr)
+
+        my_game_repr = ""
+        file = 'A'
         for i in range(grid):
+            my_game_repr += "\n"
+            rank = 1
+            if i > 0:
+                file = chr(ord(file) + 1)
             for j in range(grid):
-                my_board_repr += str(board[i][j])
-                if j is (grid - 1):
-                    my_board_repr += "\n"
-                #  "this is __repr__"
-        return my_board_repr
+                if j > 0:
+                    rank += 1
+                my_game_repr += file + str(rank) +':'+ str(board[i][j])+"\t"
+        return my_game_repr
 
 def main():
     b = Game(4,"queens")
@@ -156,7 +162,7 @@ def main():
     q3 = Queen(3,2)
     q4 = Queen(1,3)
 
-    print(b)
+    print(b.__repr__)
 
     #test a move that is allowed
     q2.move_piece(2,1)
