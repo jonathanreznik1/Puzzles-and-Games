@@ -1,3 +1,4 @@
+from unittest import skip
 from qt import QtGui, QtWidgets, QtCore, _enum, _exec
 
 # python 8 queens problem
@@ -9,6 +10,7 @@ class Board():
         self.game = game_type
         global board
         board = self.board_structure(grid_size)
+        #game_summary = self.game_summary()
 
     def board_structure(self,size):
         brd = []
@@ -51,6 +53,16 @@ class Chesssquare():
         self.file = file
         self.rank = rank
         self.piece = Gamepiece(None,file,rank)
+    
+    def reset_square(self):
+        file = self.file
+        rank = self.rank
+        board[file][rank].piece = Gamepiece(None,file,rank)
+
+    def has_piece(self):
+        if self.piece.piece_type is None:
+            return False
+        return True
 
     def __str__(self):
         return "%s%s" % (self.file, self.rank) + ":" + "%s\t" % (self.piece)
@@ -63,41 +75,50 @@ class Gamepiece():
     def __init__(self, type, file, rank):
         self.piece_type = type
         self.piece_location = (file,rank)
-        # self.place_piece(file, rank)
+        self.captures = 0
+        if type is not None:
+            self.place_piece(file, rank)
 
 #        return file,rank
-    def place_piece(self, file, rank, type):
-        board[file][rank].piece = Gamepiece(type,file,rank)
+    def place_piece(self, file, rank):
+        board[file][rank].piece = self
+        # board[file][rank].piece = Gamepiece(type,file,rank)
         self.piece_location = (file,rank)
-
-    def reset_piece(self):
-        file = self.piece_location[0]
-        rank = self.piece_location[1]
-        board[file][rank].piece.piece_type = None
 
     def show_square(self):
         return str(self) + '@' + ''.join(map(str,self.piece_location))
 
     def move_piece(self, x,y):
         if self.islglmove(x,y):
-            temp = self
-            self.reset_piece()
-            self.place_piece(x,y,temp.piece_type)
+            # save from location for reset
+            file = self.piece_location[0]
+            rank = self.piece_location[1]
+            if board[x][y].has_piece():
+                #logic for capture made including points, and replacement(?)
+                self.captures += 1
+            self.place_piece(x,y)
+            board[file][rank].reset_square()
+            
+        #     return True
+        # else:
+        #     #error handling here consider a different control statement than if/else
+        #     print("illegal move")
+        #     return False
 
     def __str__(self):
         if self.piece_type is None:
-            return "N"
+            return ""
         return self.piece_type
 
 class Queen(Gamepiece):
     def __init__(self,f,r):
         super().__init__("Qu",f,r)
-        self.place_piece(f,r,"Qu")
+        # self.place_piece(f,r)
     
     def islglmove(self,x,y):
         if self.piece_location[0] is x or self.piece_location[1] is y:
             return True
-        elif x - self.piece_location[0] is y - self.piece_location[1]:
+        elif abs(x - self.piece_location[0]) is abs(y - self.piece_location[1]):
             return True
         else:
             return False
@@ -107,6 +128,16 @@ class Game(Board):
         super().__init__(g_size,g_type)
         if g_type == "queens": 
             board = self.make_chess_board()
+
+    def game_summary(self):
+        summary = "Game summary:\n"
+        for i in range(grid):
+            for j in range(grid):
+                if board[i][j].piece is None:
+                    continue
+                elif board[i][j].piece.captures > 0:
+                    summary += "Piece %s mand %i captures\n" % (board[i][j].piece,board[i][j].piece.captures)
+        return summary
 
     def __repr__(self):
         my_board_repr = "Board:\n"
@@ -124,14 +155,33 @@ def main():
     q2 = Queen(0,1)
     q3 = Queen(3,2)
     q4 = Queen(1,3)
+
+    print(b)
+
+    #test a move that is allowed
     q2.move_piece(2,1)
-    q2.move_piece(0,1)    
+    print(b)
+
+    #test a move that is not allowed
+    q2.move_piece(0,2)    
+    print(b)
+
+    #test a move that is allowed
+    q2.move_piece(2,3)
+    print(b)
+
+
+    #test a move to where another piece is, i.e. takes piece
+    q2.move_piece(3,2)    
+    print(b)
+
+    print(b.game_summary())
+
     # user input/output for game start
     #choice = input()
     # board = new_game(game_type,game_difficulty_interactive)
     # b.place_queen(1,1)
     # b.place_queen(0,0)
-    print(b)
     # print(b.board)
     # print(b.board[0])
 
