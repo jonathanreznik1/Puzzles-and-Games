@@ -1,4 +1,3 @@
-from unittest import skip
 from qt import QtGui, QtWidgets, QtCore, _enum, _exec
 
 # python 8 queens problem
