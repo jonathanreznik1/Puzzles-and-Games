@@ -3,52 +3,12 @@ from qt import QtGui, QtWidgets, QtCore, _enum, _exec
 
 # python 8 queens problem
 
-class Board():
-    def __init__(self, grid_size, game_type):
-        global grid
-        grid = grid_size
-        self.game = game_type
-        global board
-        board = self.board_structure(grid_size)
-        #game_summary = self.game_summary()
-
-    def board_structure(self,size):
-        brd = []
-        for i in range(size):
-            brd.append([])
-            for j in range(size):
-                brd[i].append(None)
-        return brd
-
-    @staticmethod
-    def make_chess_board():
-        for i in range(grid):
-            for j in range(grid):
-                board[i][j] = (Chesssquare(i,j))
-
-
-    # TODO: need to work on this function for algorithm for checking solution goes here
-    # separate functional solutions for different algorithms such as backtracking and brute force
-    def board_solved(self):
-        return True
-    
-    def __repr__(self):
-        print("Board __repr was called")
-        my_board_repr = "Board:\n"
-        for i in range(grid):
-            for j in range(grid):
-                my_board_repr += str(board[i][j])
-                if j is (grid - 1):
-                    my_board_repr += "\n"
-                #  "this is __repr__"
-        return my_board_repr
-
-
 class Chesssquare():
     def __init__(self, file, rank):
         self.file = file
         self.rank = rank
         self.piece = Gamepiece(None,file,rank)
+        self.location = board
     
     def reset_square(self):
         file = self.file
@@ -66,20 +26,23 @@ class Chesssquare():
     # def __str__(self,debug):
     #     return "%s%s-%s" % (self.file, self.rank, self.piece)
 
-
 class Gamepiece():
     def __init__(self, type, file, rank):
         self.piece_type = type
-        self.piece_location = (file,rank)
+        self.piece_location = self.place_piece(file,rank,type)
         self.captures = 0
-        if type is not None:
-            self.place_piece(file, rank)
 
-#        return file,rank
-    def place_piece(self, file, rank):
-        board[file][rank].piece = self
+    def place_piece(self, file, rank,type):
+        if type is not None:
+            board[file][rank].piece = self
         # board[file][rank].piece = Gamepiece(type,file,rank)
-        self.piece_location = (file,rank)
+        # self.piece_location = (file,rank)
+        return file,rank
+
+    def get_square(self):
+        file = self.piece_location[0]
+        rank = self.piece_location[1]
+        return board[file][rank]
 
     def show_square(self):
         return str(self) + '@' + ''.join(map(str,self.piece_location))
@@ -87,13 +50,16 @@ class Gamepiece():
     def move_piece(self, x,y):
         if self.islglmove(x,y):
             # save from location for reset
-            file = self.piece_location[0]
-            rank = self.piece_location[1]
+            old = self.get_square()
+            captures = False
             if board[x][y].has_piece():
                 #logic for capture made including points, and replacement(?)
-                self.captures += 1
-            self.place_piece(x,y)
-            board[file][rank].reset_square()
+                captures = board[x][y].piece
+            self.piece_location = self.place_piece(x,y,self.piece_type)
+            move_history.append([self.piece_type,(old.file,old.rank),self.piece_location])
+            if captures:
+                move_history[-1].extend(['captures',str(captures)])
+            old.reset_square()
             
         #     return True
         # else:
@@ -119,17 +85,56 @@ class Queen(Gamepiece):
         else:
             return False
 
+class Board():
+    def __init__(self, grid_size):
+        global board
+        board = self.board_structure(grid_size)
+        #game_summary = self.game_summary()
+
+    def board_structure(self,size):
+        brd = []
+        for i in range(size):
+            brd.append([])
+            for j in range(size):
+                brd[i].append(None)
+        return brd
+
+    @staticmethod
+    def make_chess_board(size):
+        for i in range(size):
+            for j in range(size):
+                board[i][j] = (Chesssquare(i,j))
+
+
+    # TODO: need to work on this function for algorithm for checking solution goes here
+    # separate functional solutions for different algorithms such as backtracking and brute force
+    def board_solved(self):
+        return True
+    
+    def __repr__(self):
+        #print("Board __repr was called")
+        my_board_repr = "Board:\n"
+        for i in range(len(board)):
+            for j in range(len(board[i])):
+                my_board_repr += str(board[i][j])
+                if j is (len(board) - 1):
+                    my_board_repr += "\n"
+        return my_board_repr
+
 class Game(Board):
     def __init__(self, g_size, g_type):
-        super().__init__(g_size,g_type)
+        global move_history
+        move_history = []
+        super().__init__(g_size)
         if g_type == "queens": 
-            board = self.make_chess_board()
-
+            board = self.make_chess_board(g_size)
+        
     def game_summary(self):
         #TODO: limit to the moves that were made with move history
         summary = "Game summary:\n"
-        for i in range(grid):
-            for j in range(grid):
+        summary += "".join(str(x) for x in move_history)
+        for i in range(len(board)):
+            for j in range(len(board[i])):
                 if board[i][j].piece is None:
                     continue
                 elif board[i][j].piece.captures > 0:
@@ -142,18 +147,23 @@ class Game(Board):
         if True:
             print(board_repr)
 
-        my_game_repr = ""
-        file = 'A'
-        for i in range(grid):
-            my_game_repr += "\n"
-            rank = 1
-            if i > 0:
-                file = chr(ord(file) + 1)
-            for j in range(grid):
-                if j > 0:
-                    rank += 1
-                my_game_repr += file + str(rank) +':'+ str(board[i][j])+"\t"
+        #flag for printing more
+        my_game_repr = "Game __repr__ called"
+
+        if False:
+            file = 'A'
+            for i in range(grid):
+                my_game_repr += "\n"
+                rank = 1
+                if i > 0:
+                    file = chr(ord(file) + 1)
+                for j in range(grid):
+                    if j > 0:
+                        rank += 1
+                    my_game_repr += file + str(rank) +':'+ str(board[i][j])+"\t"
         return my_game_repr
+
+
 
 def main():
     b = Game(4,"queens")
