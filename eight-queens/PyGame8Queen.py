@@ -1,13 +1,17 @@
 from qt import QtGui, QtWidgets, QtCore, _enum, _exec
 
 # python 8 queens problem
+DEBUG = True
+DEBUG_BOARD = False
+DEBUG_GAME = True
+
 
 class Chesssquare():
     def __init__(self, file, rank):
         self.file = file
         self.rank = rank
         self.piece = Gamepiece(None,file,rank)
-        self.location = board
+        self.location = board       # calls global board
     
     def reset_square(self):
         file = self.file
@@ -20,6 +24,8 @@ class Chesssquare():
         return True
 
     def __str__(self):
+        if self.piece.piece_type is None:
+            return "%s%s" % (self.file, self.rank) + ":  \t"
         return "%s%s" % (self.file, self.rank) + ":" + "%s\t" % (self.piece)
 
     # def __str__(self,debug):
@@ -34,8 +40,6 @@ class Gamepiece():
     def place_piece(self, file, rank,type):
         if type is not None:
             board[file][rank].piece = self
-        # board[file][rank].piece = Gamepiece(type,file,rank)
-        # self.piece_location = (file,rank)
         return file,rank
 
     def get_square(self):
@@ -43,12 +47,12 @@ class Gamepiece():
         rank = self.piece_location[1]
         return board[file][rank]
 
-    def show_square(self):
-        return str(self) + '@' + ''.join(map(str,self.piece_location))
+    # def show_square(self):
+    #     return str(self) + '@' + ''.join(map(str,self.piece_location))
 
     def move_piece(self, x,y):
         if self.islglmove(x,y):
-            # save from location for reset
+            # save location for reset
             old = self.get_square()
             captures = False
             if board[x][y].has_piece():
@@ -59,26 +63,27 @@ class Gamepiece():
             if captures:
                 move_history[-1].extend(['captures',str(captures)])
             old.reset_square()
-            
-        #     return True
-        # else:
-        #     #error handling here consider a different control statement than if/else
-        #     print("illegal move")
-        #     return False
+            if DEBUG is True:
+                print(move_history[-1])
+            return True
+        if DEBUG is True:
+            print("illegal move!")
+        return False 
 
     def __str__(self):
         if self.piece_type is None:
             return ""
-        return self.piece_type
+        return str(self.piece_type)
 
 class Queen(Gamepiece):
     def __init__(self,f,r):
         super().__init__("Qu",f,r)
-        # self.place_piece(f,r)
     
     def islglmove(self,x,y):
+        #logic for move by a queen along file or rank
         if self.piece_location[0] is x or self.piece_location[1] is y:
             return True
+        #logic for move by queen along diag
         elif abs(x - self.piece_location[0]) is abs(y - self.piece_location[1]):
             return True
         else:
@@ -86,11 +91,13 @@ class Queen(Gamepiece):
 
 class Board():
     def __init__(self, grid_size):
+        #board is given a global assignment
         global board
         board = self.board_structure(grid_size)
         #game_summary = self.game_summary()
 
-    def board_structure(self,size):
+    @staticmethod
+    def board_structure(size):
         brd = []
         for i in range(size):
             brd.append([])
@@ -104,14 +111,14 @@ class Board():
             for j in range(size):
                 board[i][j] = (Chesssquare(i,j))
 
-
     # TODO: need to work on this function for algorithm for checking solution goes here
     # separate functional solutions for different algorithms such as backtracking and brute force
     def board_solved(self):
         return True
     
     def __repr__(self):
-        #print("Board __repr was called")
+        if DEBUG is True:
+            print("Board __repr was called")
         my_board_repr = "Board:\n"
         for i in range(len(board)):
             for j in range(len(board[i])):
@@ -122,14 +129,16 @@ class Board():
 
 class Game(Board):
     def __init__(self, g_size, g_type):
-        global move_history
-        move_history = []
         super().__init__(g_size)
+        # setup the chess board for 8 queens
         if g_type == "queens": 
             board = self.make_chess_board(g_size)
+        # track move history in global assignment
+        global move_history
+        move_history = []
         
     def game_summary(self):
-        #TODO: limit to the moves that were made with move history
+        #  limited to the moves that were made within move history
         summary = "Game summary:\n"
         summary += "".join(str(x) for x in move_history)
         for i in range(len(board)):
@@ -141,28 +150,27 @@ class Game(Board):
         return summary
 
     def __repr__(self):
-        board_repr = Board.__repr__(self)
-        #flag for printing board or not
-        if True:
-            print(board_repr)
+        if DEBUG:
+            print("Game __repr__ called")
 
-        #flag for printing more
-        my_game_repr = "Game __repr__ called"
+        # Board output
+        if DEBUG_BOARD:
+            return Board.__repr__(self)
 
-        if False:
+        # Game output
+        my_game_repr = ""
+        if DEBUG_GAME:
             file = 'A'
-            for i in range(grid):
+            for i in range(len(board)):
                 my_game_repr += "\n"
                 rank = 1
                 if i > 0:
                     file = chr(ord(file) + 1)
-                for j in range(grid):
+                for j in range(len(board)):
                     if j > 0:
                         rank += 1
-                    my_game_repr += file + str(rank) +':'+ str(board[i][j])+"\t"
+                    my_game_repr += file + str(rank) +':'+ str(board[i][j])[-3:-1]+"\t"
         return my_game_repr
-
-
 
 def main():
     b = Game(4,"queens")
@@ -171,6 +179,7 @@ def main():
     q3 = Queen(3,2)
     q4 = Queen(1,3)
 
+    print(b)
     print(b.__repr__)
 
     #test a move that is allowed
