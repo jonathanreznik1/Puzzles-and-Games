@@ -1,9 +1,10 @@
 from qt import QtGui, QtWidgets, QtCore, _enum, _exec
 
 # python 8 queens problem
-DEBUG = True
+DEBUG = False
 DEBUG_BOARD = False
-DEBUG_GAME = True
+DEBUG_GAME = False
+BOARD_SOLVED = False
 
 
 class Chesssquare():
@@ -11,7 +12,7 @@ class Chesssquare():
         self.file = file
         self.rank = rank
         self.piece = Gamepiece(None,file,rank)
-        self.location = board       # calls global board
+        # self.location = board       # calls global board
     
     def reset_square(self):
         file = self.file
@@ -63,6 +64,8 @@ class Gamepiece():
             if captures:
                 move_history[-1].extend(['captures',str(captures)])
             old.reset_square()
+            if self.get_square().location.board_solved():
+                BOARD_SOLVED = True
             if DEBUG is True:
                 print(move_history[-1])
             return True
@@ -92,9 +95,7 @@ class Queen(Gamepiece):
 class Board():
     def __init__(self, grid_size):
         #board is given a global assignment
-        global board
-        board = self.board_structure(grid_size)
-        #game_summary = self.game_summary()
+        return self.board_structure(grid_size)
 
     @staticmethod
     def board_structure(size):
@@ -125,11 +126,16 @@ class Board():
                 my_board_repr += str(board[i][j])
                 if j is (len(board) - 1):
                     my_board_repr += "\n"
+        if BOARD_SOLVED:
+            my_board_repr += "\nBoard is solved"
+        else: 
+            my_board_repr += "\nBoard is not solved"
         return my_board_repr
 
 class Game(Board):
     def __init__(self, g_size, g_type):
-        super().__init__(g_size)
+        global board
+        board = super().__init__(g_size)
         # setup the chess board for 8 queens
         if g_type == "queens": 
             board = self.make_chess_board(g_size)
@@ -159,17 +165,19 @@ class Game(Board):
 
         # Game output
         my_game_repr = ""
-        if DEBUG_GAME:
-            file = 'A'
-            for i in range(len(board)):
-                my_game_repr += "\n"
-                rank = 1
-                if i > 0:
-                    file = chr(ord(file) + 1)
-                for j in range(len(board)):
-                    if j > 0:
-                        rank += 1
-                    my_game_repr += file + str(rank) +':'+ str(board[i][j])[-3:-1]+"\t"
+        # if DEBUG_GAME:
+        file = 'A'
+        for i in range(len(board)):
+            my_game_repr += "\n"
+            rank = 1
+            if i > 0:
+                file = chr(ord(file) + 1)
+            for j in range(len(board)):
+                if j > 0:
+                    rank += 1
+                my_game_repr += file + str(rank) +':'+ str(board[i][j])[-3:-1]+"\t"
+        if BOARD_SOLVED:
+            my_game_repr += "\nGame is over - solved"
         return my_game_repr
 
 def main():
@@ -178,9 +186,8 @@ def main():
     q2 = Queen(0,1)
     q3 = Queen(3,2)
     q4 = Queen(1,3)
-
     print(b)
-    print(b.__repr__)
+
 
     #test a move that is allowed
     q2.move_piece(2,1)
@@ -193,7 +200,6 @@ def main():
     #test a move that is allowed
     q2.move_piece(2,3)
     print(b)
-
 
     #test a move to where another piece is, i.e. takes piece
     q2.move_piece(3,2)    
