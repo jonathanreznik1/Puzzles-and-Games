@@ -1,11 +1,9 @@
 from qt import QtGui, QtWidgets, QtCore, _enum, _exec
 import uuid
+import Solutions
 
 # python 8 queens problem
-DEBUG = False
-GAME_REPR = True
-DATA_REPR = True
-BOARD_STATUS = True
+DEBUG = True
 
 
 class Chesssquare():
@@ -46,7 +44,6 @@ class Chesssquare():
     def __repr__(self):
         return "Square" + str(self.get_piece())
 
-
 class Game():
     def __init__(self):
         global games
@@ -56,6 +53,9 @@ class Game():
         if DEBUG:
             print("newboard: " + str(board.b_id))
         games[board.b_id] = board
+
+    def fetch_board(self,uuid):
+        return games[uuid]
 
 class Board():
     def __init__(self, grid_size):
@@ -94,12 +94,12 @@ class Queens(Board):
         ##call constructor of Board returns a 2-d data structure
         super().__init__(g_size)
         self.b_solved = False
-        self.setup_queens(games[self.b_id])
+        # self.setup_queens(games[self.b_id])
 
-    @staticmethod
-    def setup_queens(board):
-        for i in board:
-            i[0].set_piece("Qu")
+    # @staticmethod
+    # def setup_queens(board):
+    #     for i in board:
+    #         i[0].set_piece("Qu")
  
     def board_solved(self):
         algorithm_flag = 1
@@ -140,7 +140,7 @@ class CLI_Output(Board):
         self.b_id = boardgame.b_id
         return None
 
-    def __str__(self):
+    def __repr__(self):
         my_repr = ''
         if True:
             chess_repr = "Chessboard (CLI) Representation:\n"
@@ -156,7 +156,7 @@ class CLI_Output(Board):
                     chess_repr += file + str(rank) +':'+ str((games[self.b_id].brd)[i][j])[-3:-1]+"\t"
             chess_repr += "\n"
             my_repr += chess_repr
-        if DATA_REPR:
+        if False:
             data_repr = "Data Representation:\n"
             my_repr += data_repr + "".join(map(''.join,str(games[self.b_id].brd)))
         return my_repr
@@ -165,23 +165,23 @@ class Gamepiece():
     def __init__(self, type, file, rank, board):
         self.b_id = board.b_id
         self.piece_type = type
-        self.piece_location = (file,rank)
+        self.piece_location = board.brd[file][rank]
         if type is not None:
             square = self.get_square(file,rank)
-            self.place_piece(square, type)
+            self.place_piece(type)
     #         self.place_piece(file,rank,type)  #returns a file,rank tuple
         self.capture = False    #capture
 
-    def place_piece(self, square, type):
-        file = square.file
-        rank = square.rank
-        games[self.b_id][file][rank].piece = self
-        return file,rank
+    def place_piece(self, type):
+        self.piece_location.piece = self
+        # games[self.b_id][file][rank].piece = self
+        # return file,rank
 
     def get_square(self,file,rank):
-        file = self.piece_location[0]
-        rank = self.piece_location[1]
-        return games[self.b_id][file][rank]
+        return self.piece_location
+        # file = self.piece_location[0]
+        # rank = self.piece_location[1]
+        # return games[self.b_id][file][rank]
 
     # def show_square(self):
     #     return str(self) + '@' + ''.join(map(str,self.piece_location))
@@ -227,15 +227,19 @@ class Queen(Gamepiece):
 
 def main():
     g = Game()
-    g.new_game(Queens(8))
     g.new_game(Queens(4))
-    g.new_game(Queens(5))
-    for game in games.keys():
-        print(game)
-    for game in games.values():
-        print(game)
-    # b = Queens(8)
-    # print(b)
+    g.new_game(Queens(6))
+    g.new_game(Queens(8))
+    g.new_game(Queens(10))
+    g.new_game(Queens(12))
+
+    for uuid in games:
+        #Print the empty boards
+        print(g.fetch_board(uuid))
+
+        #Solve them
+        Solutions.solveNQ(g.fetch_board(uuid).brd)
+        print(g.fetch_board(uuid))
 
 
 # #Unit Tests for Queen Gamepieces
