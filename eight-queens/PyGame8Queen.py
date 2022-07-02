@@ -9,14 +9,15 @@ BOARD_STATUS = True
 
 
 class Chesssquare():
-    def __init__(self, file, rank):
+    def __init__(self, board, file, rank):
+        self.board = board
         self.file = (file)
         self.rank = (rank)
-        self.piece = Gamepiece(None,file,rank)
+        self.piece = Gamepiece(None,file,rank, board)
         self.reset_square()
 
-    def get_location(self):
-        return 
+    def get_board(self):
+        return self.board
 
     def get_position(self):
         return (self.file,self.rank)
@@ -27,7 +28,7 @@ class Chesssquare():
         return True
 
     def set_piece(self,type):
-        self.piece = Gamepiece(type,self.file,self.rank)
+        self.piece = Gamepiece(type,self.file,self.rank,self.board)
 
     def get_piece(self):
         return self.piece
@@ -35,7 +36,7 @@ class Chesssquare():
     def reset_square(self):
         file = self.file
         rank = self.rank
-        self.piece = Gamepiece(None,file,rank)
+        self.piece = Gamepiece(None,file,rank,self.board)
 
     def __str__(self):
         if self.piece.piece_type is None:
@@ -46,39 +47,70 @@ class Chesssquare():
         return "Square" + str(self.get_piece())
 
 
+class Game():
+    def __init__(self):
+        global games
+        games = {}
+        
+    def new_game(self, board):
+        if DEBUG:
+            print("newboard: " + str(board.b_id))
+        games[board.b_id] = board
+
 class Board():
     def __init__(self, grid_size):
         self.b_id = uuid.uuid1()
         self.b_move_history = []
-        global board
-        board = self.board_structure(grid_size)  #assigned to a global board
-        self.make_chessboard(grid_size)
-        # global games
-        # games = {}
-        # games[self.b_id] = self
+        self.size = grid_size
+        self.brd = []
+
+        #assigned to a global var
+        games[self.b_id] =  self.brd
+        self.board_structure(self.brd,grid_size)  
+        self.make_chessboard(self)
+    
+    def get_board(self):
+        return games[self.b_id]
 
     def game_summary(self):
         summary = "".join(str(x) for x in self.b_move_history)
         return summary
 
     @staticmethod
-    def board_structure(size):
-        brd = []
+    def board_structure(board,size):
         for i in range(size):
-            brd.append([])
+            board.append([])
             for j in range(size):
-                brd[i].append(None)         #filled with null/none
-        return brd
-
+                board[i].append(None)         #filled with null/none
+        
     @staticmethod
-    def make_chessboard(size):
-        for i in range(size):
-            for j in range(size):
-                board[i][j] = (Chesssquare(i,j))        # now filled with chesssquares
+    def make_chessboard(self):
+        for i in range(self.size):
+            for j in range(self.size):
+                games[self.b_id][i][j] = (Chesssquare(self,i,j))        # now filled with chesssquares
 
     def __repr__(self):
         if DEBUG:
             print("Board __repr__ was called")
+        my_repr = ''
+        chess_repr = "Chessboard (CLI) Representation:\n"
+        file = 'A'
+        for i in range(games[self.b_id].size):
+            rank = 1
+            if i > 0:
+                chess_repr += "\n"
+                file = chr(ord(file) + 1)
+            for j in range(games[self.b_id].size):
+                if j > 0:
+                    rank += 1
+                chess_repr += file + str(rank) +':'+ str((games[self.b_id].brd)[i][j])[-3:-1]+"\t"
+        chess_repr += "\n"
+        my_repr += chess_repr
+        if DATA_REPR:
+            data_repr = "Data Representation:\n"
+            # my_repr += data_repr + "".join(map(''.join,str(games[self.b_id])))
+        return my_repr
+
         return str(CLI_Output(self))
 
 class Queens(Board):
@@ -86,10 +118,10 @@ class Queens(Board):
         ##call constructor of Board returns a 2-d data structure
         super().__init__(g_size)
         self.b_solved = False
-        self.setup_queens()
+        self.setup_queens(games[self.b_id])
 
     @staticmethod
-    def setup_queens():
+    def setup_queens(board):
         for i in board:
             i[0].set_piece("Qu")
  
@@ -105,13 +137,13 @@ class Queens(Board):
 
     def board_solved_brute(self):
         # O(n) algorithm for rows
-        for row in board:
+        for row in games[self.b_id]:
             if [x.has_piece() for x in row].count(True) > 1:
                 print("unsolved - row with 2 pieces")
                 return False
         # Algorithm for columns
-        for i in range(len(board)):
-            if [col[i].has_piece() for col in board].count(True) > 1:
+        for i in range(len(games[self.b_id])):
+            if [col[i].has_piece() for col in games[self.b_id]].count(True) > 1:
                 print("unsolved - col with 2 pieces")
                 return False
 
@@ -129,48 +161,52 @@ class Queens(Board):
     
 class CLI_Output(Board):
     def __init__(self,boardgame):
+        self.b_id = boardgame.b_id
         return None
 
     def __str__(self):
         my_repr = ''
         chess_repr = "Chessboard (CLI) Representation:\n"
         file = 'A'
-        for i in range(len(board)):
-            if i > 0:
-                chess_repr += "\n"
+        for i in range(games[self.b_id].size):
             rank = 1
             if i > 0:
+                chess_repr += "\n"
                 file = chr(ord(file) + 1)
-            for j in range(len(board)):
+            for j in range(games[self.b_id].size):
                 if j > 0:
                     rank += 1
-                chess_repr += file + str(rank) +':'+ str(board[i][j])[-3:-1]+"\t"
+                # chess_repr += file + str(rank) +':'+ str(self.get_board()[i][j])[-3:-1]+"\t"
         chess_repr += "\n"
         my_repr += chess_repr
         if DATA_REPR:
             data_repr = "Data Representation:\n"
-            my_repr += data_repr + "".join(map(''.join,str(board)))
+            # my_repr += data_repr + "".join(map(''.join,str(games[self.b_id])))
         return my_repr
 
 
 
 class Gamepiece():
-    def __init__(self, type, file, rank):
+    def __init__(self, type, file, rank, board):
+        self.b_id = board.b_id
         self.piece_type = type
         self.piece_location = (file,rank)
         if type is not None:
-            self.place_piece(file, rank, type)
+            square = self.get_square(file,rank)
+            self.place_piece(square, type)
     #         self.place_piece(file,rank,type)  #returns a file,rank tuple
         self.capture = False    #capture
 
-    def place_piece(self, file, rank,type):
-        board[file][rank].piece = self
+    def place_piece(self, square, type):
+        file = square.file
+        rank = square.rank
+        games[self.b_id][file][rank].piece = self
         return file,rank
 
-    def get_square(self):
+    def get_square(self,file,rank):
         file = self.piece_location[0]
         rank = self.piece_location[1]
-        return board[file][rank]
+        return games[self.b_id][file][rank]
 
     # def show_square(self):
     #     return str(self) + '@' + ''.join(map(str,self.piece_location))
@@ -179,17 +215,17 @@ class Gamepiece():
         if self.islglmove(x,y):
             # save location for reset
             old = self.get_square()
-            b_move_history.append([self.piece_type,(old.file,old.rank),self.piece_location])
-            if board[x][y].has_piece():
+            self.board.b_move_history.append([self.piece_type,(old.file,old.rank),self.piece_location])
+            if games[self.b_id][x][y].has_piece():
                 #logic for capture made including points, and replacement(?)
                 print("Capture")
-                capture = board[x][y].piece
-                b_move_history[-1].extend(['captures',str(capture)])
+                capture = games[self.b_id][x][y].piece
+                self.board.b_move_history[-1].extend(['captures',str(capture)])
             self.piece_location = self.place_piece(x,y,self.piece_type)
             old.reset_square()
             # if self.get_square().location.board_solved():
             if DEBUG:
-                print("debug - Move " + str(len(b_move_history)) + ":" + str(b_move_history[-1]))
+                print("debug - Move " + str(len(games[self.b_id].b_move_history)) + ":" + str(games[self.b_id].b_move_history[-1]))
             return True
         else:
             print("illegal move!")
@@ -215,8 +251,16 @@ class Queen(Gamepiece):
             return False
 
 def main():
-    b = Queens(8)
-    print(b)
+    g = Game()
+    g.new_game(Queens(8))
+    g.new_game(Queens(4))
+    g.new_game(Queens(5))
+    for game in games.keys():
+        print(game)
+    for game in games.values():
+        print(game)
+    # b = Queens(8)
+    # print(b)
 
 
 # #Unit Tests for Queen Gamepieces
