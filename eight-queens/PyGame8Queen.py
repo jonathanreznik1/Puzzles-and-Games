@@ -62,12 +62,11 @@ class Board():
         self.b_id = uuid.uuid1()
         self.b_move_history = []
         self.size = grid_size
-        self.brd = []
+        self.brd = self.board_structure(grid_size)
 
         #assigned to a global var
         games[self.b_id] =  self.brd
-        self.board_structure(self.brd,grid_size)  
-        self.make_chessboard(self)
+        self.make_chessboard()
     
     def get_board(self):
         return games[self.b_id]
@@ -77,13 +76,9 @@ class Board():
         return summary
 
     @staticmethod
-    def board_structure(board,size):
-        for i in range(size):
-            board.append([])
-            for j in range(size):
-                board[i].append(None)         #filled with null/none
+    def board_structure(size):
+        return [[None for i in range(size)] for i in range(size)]
         
-    @staticmethod
     def make_chessboard(self):
         for i in range(self.size):
             for j in range(self.size):
@@ -92,25 +87,6 @@ class Board():
     def __repr__(self):
         if DEBUG:
             print("Board __repr__ was called")
-        my_repr = ''
-        chess_repr = "Chessboard (CLI) Representation:\n"
-        file = 'A'
-        for i in range(games[self.b_id].size):
-            rank = 1
-            if i > 0:
-                chess_repr += "\n"
-                file = chr(ord(file) + 1)
-            for j in range(games[self.b_id].size):
-                if j > 0:
-                    rank += 1
-                chess_repr += file + str(rank) +':'+ str((games[self.b_id].brd)[i][j])[-3:-1]+"\t"
-        chess_repr += "\n"
-        my_repr += chess_repr
-        if DATA_REPR:
-            data_repr = "Data Representation:\n"
-            # my_repr += data_repr + "".join(map(''.join,str(games[self.b_id])))
-        return my_repr
-
         return str(CLI_Output(self))
 
 class Queens(Board):
@@ -166,25 +142,24 @@ class CLI_Output(Board):
 
     def __str__(self):
         my_repr = ''
-        chess_repr = "Chessboard (CLI) Representation:\n"
-        file = 'A'
-        for i in range(games[self.b_id].size):
-            rank = 1
-            if i > 0:
-                chess_repr += "\n"
-                file = chr(ord(file) + 1)
-            for j in range(games[self.b_id].size):
-                if j > 0:
-                    rank += 1
-                # chess_repr += file + str(rank) +':'+ str(self.get_board()[i][j])[-3:-1]+"\t"
-        chess_repr += "\n"
-        my_repr += chess_repr
+        if True:
+            chess_repr = "Chessboard (CLI) Representation:\n"
+            file = 'A'
+            for i in range(games[self.b_id].size):
+                rank = 1
+                if i > 0:
+                    chess_repr += "\n"
+                    file = chr(ord(file) + 1)
+                for j in range(games[self.b_id].size):
+                    if j > 0:
+                        rank += 1
+                    chess_repr += file + str(rank) +':'+ str((games[self.b_id].brd)[i][j])[-3:-1]+"\t"
+            chess_repr += "\n"
+            my_repr += chess_repr
         if DATA_REPR:
             data_repr = "Data Representation:\n"
-            # my_repr += data_repr + "".join(map(''.join,str(games[self.b_id])))
+            my_repr += data_repr + "".join(map(''.join,str(games[self.b_id].brd)))
         return my_repr
-
-
 
 class Gamepiece():
     def __init__(self, type, file, rank, board):
