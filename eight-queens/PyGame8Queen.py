@@ -1,5 +1,3 @@
-from sysconfig import get_path_names
-from traceback import StackSummary
 from qt import QtGui, QtWidgets, QtCore, _enum, _exec
 import uuid
 
