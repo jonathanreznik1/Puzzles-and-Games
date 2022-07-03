@@ -1,6 +1,7 @@
 from qt import QtGui, QtWidgets, QtCore, _enum, _exec
 import uuid
 import Solutions
+import sys
 
 #TODO: 
 # 1) cleanup and simplify the design in this code, 
@@ -251,6 +252,11 @@ class Gamepiece():
 
 
 def main():
+    app = QtWidgets.QApplication(sys.argv)
+    window = QtWidgets.QWidget()
+    window.show()
+    app.exec()
+
     g = Game()
     g.new_game(Queens(4))
     g.new_game(Queens(6))
