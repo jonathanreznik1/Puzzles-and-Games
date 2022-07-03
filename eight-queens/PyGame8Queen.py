@@ -2,44 +2,40 @@ from qt import QtGui, QtWidgets, QtCore, _enum, _exec
 import uuid
 import Solutions
 
+#TODO: 1) cleanup this code, 2) introduce gui elements, 3) introduce multiple solutions or interactive component
+
 # python 8 queens problem
 DEBUG = True
-
+MODE_GAME = 2
 
 class Chesssquare():
     def __init__(self, board, file, rank):
         self.board = board
-        self.file = (file)
-        self.rank = (rank)
+        self.location = (file,rank) #location[0], location[1]
         self.piece = Gamepiece(None,file,rank, board)
         self.reset_square()
 
-    def get_board(self):
-        return self.board
-
-    def get_position(self):
-        return (self.file,self.rank)
-    
     def has_piece(self):
         if self.piece.piece_type is None:
             return False
         return True
 
     def set_piece(self,type):
-        self.piece = Gamepiece(type,self.file,self.rank,self.board)
+        self.piece = Gamepiece(type,self.location[0],self.location[1],self.board)
 
     def get_piece(self):
         return self.piece
 
+    def get_board(self):
+        return self.board
+
     def reset_square(self):
-        file = self.file
-        rank = self.rank
-        self.piece = Gamepiece(None,file,rank,self.board)
+        self.set_piece(None)
 
     def __str__(self):
         if self.piece.piece_type is None:
-            return "%s%s" % (self.file, self.rank) + ":  \t"
-        return "%s%s" % (self.file, self.rank) + ":" + "%s\t" % (self.piece)
+            return "%s%s" % (self.location[0], self.location[1]) + ":  \t"
+        return "%s%s" % (self.location[0], self.location[1]) + ":" + "%s\t" % (self.piece)
 
     def __repr__(self):
         return "Square" + str(self.get_piece())
@@ -60,46 +56,52 @@ class Game():
 class Board():
     def __init__(self, grid_size):
         self.b_id = uuid.uuid1()
-        self.b_move_history = []
         self.size = grid_size
         self.brd = self.board_structure(grid_size)
-
-        #assigned to a global var
-        games[self.b_id] =  self.brd
+        # self.b_move_history = []
         self.make_chessboard()
-    
-    def get_board(self):
-        return games[self.b_id]
+        self.add_to_games()
 
-    def game_summary(self):
-        summary = "".join(str(x) for x in self.b_move_history)
-        return summary
+    def add_to_games(self):
+        games[self.b_id] =  self.brd    #games is global dictionary/map
+
+    def make_chessboard(self):
+        for i in range(self.size):
+            for j in range(self.size):
+                self.brd[i][j] = (Chesssquare(self,i,j))        # chessboard with chesssquares
 
     @staticmethod
     def board_structure(size):
         return [[None for i in range(size)] for i in range(size)]
         
-    def make_chessboard(self):
-        for i in range(self.size):
-            for j in range(self.size):
-                games[self.b_id][i][j] = (Chesssquare(self,i,j))        # now filled with chesssquares
+    def get_board(self):
+        return games[self.b_id]
 
+    def game_summary(self):
+        return "".join(str(x) for x in self.b_move_history)
+        
     def __repr__(self):
-        if DEBUG:
-            print("Board __repr__ was called")
         return str(CLI_Output(self))
 
 class Queens(Board):
     def __init__(self, g_size):
-        ##call constructor of Board returns a 2-d data structure
         super().__init__(g_size)
         self.b_solved = False
-        # self.setup_queens(games[self.b_id])
+        self.b_game_mode = MODE_GAME    # 1,2  for auto/interactive
 
-    # @staticmethod
-    # def setup_queens(board):
-    #     for i in board:
-    #         i[0].set_piece("Qu")
+        if MODE_GAME == 1:
+            if DEBUG:
+                print("Solving...")
+            Solutions.solveNQ(games[self.b_id])
+            print(self)
+
+        elif MODE_GAME == 2:
+            self.setup_queens(games[self.b_id])
+
+    @staticmethod
+    def setup_queens(board):
+        for i in board:
+            i[0].set_piece("Qu")
  
     def board_solved(self):
         algorithm_flag = 1
@@ -145,15 +147,15 @@ class CLI_Output(Board):
         if True:
             chess_repr = "Chessboard (CLI) Representation:\n"
             file = 'A'
-            for i in range(games[self.b_id].size):
+            for i in range(len(games[self.b_id])):
                 rank = 1
                 if i > 0:
                     chess_repr += "\n"
                     file = chr(ord(file) + 1)
-                for j in range(games[self.b_id].size):
+                for j in range(len(games[self.b_id])):
                     if j > 0:
                         rank += 1
-                    chess_repr += file + str(rank) +':'+ str((games[self.b_id].brd)[i][j])[-3:-1]+"\t"
+                    chess_repr += file + str(rank) +':'+ str((games[self.b_id])[i][j])[-3:-1]+"\t"
             chess_repr += "\n"
             my_repr += chess_repr
         if False:
@@ -167,7 +169,7 @@ class Gamepiece():
         self.piece_type = type
         self.piece_location = board.brd[file][rank]
         if type is not None:
-            square = self.get_square(file,rank)
+            # square = self.get_square(file,rank)
             self.place_piece(type)
     #         self.place_piece(file,rank,type)  #returns a file,rank tuple
         self.capture = False    #capture
@@ -177,7 +179,7 @@ class Gamepiece():
         # games[self.b_id][file][rank].piece = self
         # return file,rank
 
-    def get_square(self,file,rank):
+    def get_square(self):
         return self.piece_location
         # file = self.piece_location[0]
         # rank = self.piece_location[1]
@@ -233,14 +235,14 @@ def main():
     g.new_game(Queens(10))
     g.new_game(Queens(12))
 
-    for uuid in games:
+    # for uuid in games:
         #Print the empty boards
-        print(g.fetch_board(uuid))
+        # print(g.fetch_board(uuid))
 
         #Solve them
-        Solutions.solveNQ(g.fetch_board(uuid).brd)
-        print(g.fetch_board(uuid))
-
+        # Solutions.solveNQ(g.fetch_board(uuid).brd)
+        # print(g.fetch_board(uuid))
+# 
 
 # #Unit Tests for Queen Gamepieces
 #     q2 = Queen(0,1)
