@@ -44,6 +44,9 @@ class Game():
     def __init__(self):
         global games
         games = {}
+
+        global board_move_history
+        board_move_history = {}
         
     def new_game(self, board):
         if DEBUG:
@@ -58,9 +61,16 @@ class Board():
         self.b_id = uuid.uuid1()
         self.size = grid_size
         self.brd = self.board_structure(grid_size)
-        # self.b_move_history = []
-        self.make_chessboard()
+
+        #assigned to a global var
+        games[self.b_id] =  self.brd
+        self.make_chessboard()          #consider initial placement of pieces here
+
+        board_move_history[self.b_id] = []
         self.add_to_games()
+    
+    def get_board(self):
+        return games[self.b_id]
 
     def add_to_games(self):
         games[self.b_id] =  self.brd    #games is global dictionary/map
@@ -192,17 +202,17 @@ class Gamepiece():
         if self.islglmove(x,y):
             # save location for reset
             old = self.get_square()
-            self.board.b_move_history.append([self.piece_type,(old.file,old.rank),self.piece_location])
+            board_move_history.append([self.piece_type,(old.file,old.rank),self.piece_location])
             if games[self.b_id][x][y].has_piece():
                 #logic for capture made including points, and replacement(?)
                 print("Capture")
                 capture = games[self.b_id][x][y].piece
-                self.board.b_move_history[-1].extend(['captures',str(capture)])
+                board_move_history[-1].extend(['captures',str(capture)])
             self.piece_location = self.place_piece(x,y,self.piece_type)
             old.reset_square()
             # if self.get_square().location.board_solved():
             if DEBUG:
-                print("debug - Move " + str(len(games[self.b_id].b_move_history)) + ":" + str(games[self.b_id].b_move_history[-1]))
+                print("debug - Move " + str(len(board_move_history)) + ":" + str(board_move_history[-1]))
             return True
         else:
             print("illegal move!")
