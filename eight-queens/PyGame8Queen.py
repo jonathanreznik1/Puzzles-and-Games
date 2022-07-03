@@ -2,11 +2,18 @@ from qt import QtGui, QtWidgets, QtCore, _enum, _exec
 import uuid
 import Solutions
 
-#TODO: 1) cleanup this code, 2) introduce gui elements, 3) introduce multiple solutions or interactive component
+#TODO: 
+# 1) cleanup and simplify the design in this code, 
+# 2) introduce gui elements, 
+# 3) introduce new functionality
+#   a) Finding more solutions using alg1, specify how many, maybe randomize the seed and count the # of operations
+#   b) Implement Backtracking algorithm, compare the efficiency of the two algorithms
+#   c) Also create interactive way to cycle through solutions, maybe using a file to store them and implement a check solution button that verifies etc.
+#   d) If possible create some kind of HINT feature that helps provide some AI to the program
 
 # python 8 queens problem
 DEBUG = True
-MODE_GAME = 2
+MODE_GAME = 1
 
 class Chesssquare():
     def __init__(self, board, file, rank):
@@ -14,6 +21,33 @@ class Chesssquare():
         self.location = (file,rank) #location[0], location[1]
         self.piece = Gamepiece(None,file,rank, board)
         self.reset_square()
+
+    def get_board_id(self):
+        return self.board.b_id
+
+    def get_piece_type(self):
+        return self.piece.piece_type
+
+    def move_piece(self, x,y):
+        if self.piece.islglmove(x,y):
+            # save location for reset
+            # old = self.get_square()
+            move_history[self.get_board_id()].append([self.get_piece_type(),self.location,(x,y)])
+            if self.get_board()[x][y].has_piece():
+                #logic for capture made including points, and replacement(?)
+                print("Capture")
+                capture = games[self.b_id][x][y].piece
+                move_history[-1].extend(['captures',str(capture)])
+            self.get_board()[x][y].set_piece(self.get_piece_type())
+            # self.piece_location = self.place_piece(x,y,self.piece_type)
+            self.reset_square()
+            # if self.get_square().location.board_solved():
+            if DEBUG:
+                print("debug - Move " + str(len(move_history[self.get_board_id()])) + ":" + str(move_history[self.get_board_id()][-1]))
+            return True
+        else:
+            print("illegal move!")
+        return False 
 
     def has_piece(self):
         if self.piece.piece_type is None:
@@ -27,7 +61,7 @@ class Chesssquare():
         return self.piece
 
     def get_board(self):
-        return self.board
+        return self.board.brd
 
     def reset_square(self):
         self.set_piece(None)
@@ -45,13 +79,14 @@ class Game():
         global games
         games = {}
 
-        global board_move_history
-        board_move_history = {}
+        global move_history
+        move_history = {}
         
     def new_game(self, board):
         if DEBUG:
             print("newboard: " + str(board.b_id))
         games[board.b_id] = board
+        move_history[board.b_id] = []
 
     def fetch_board(self,uuid):
         return games[uuid]
@@ -66,7 +101,7 @@ class Board():
         games[self.b_id] =  self.brd
         self.make_chessboard()          #consider initial placement of pieces here
 
-        board_move_history[self.b_id] = []
+        # move_history[self.b_id] = []
         self.add_to_games()
     
     def get_board(self):
@@ -150,6 +185,7 @@ class Queens(Board):
 class CLI_Output(Board):
     def __init__(self,boardgame):
         self.b_id = boardgame.b_id
+        self.game = boardgame
         return None
 
     def __repr__(self):
@@ -157,15 +193,15 @@ class CLI_Output(Board):
         if True:
             chess_repr = "Chessboard (CLI) Representation:\n"
             file = 'A'
-            for i in range(len(games[self.b_id])):
+            for i in range(self.game.size):
                 rank = 1
                 if i > 0:
                     chess_repr += "\n"
                     file = chr(ord(file) + 1)
-                for j in range(len(games[self.b_id])):
+                for j in range(self.game.size):
                     if j > 0:
                         rank += 1
-                    chess_repr += file + str(rank) +':'+ str((games[self.b_id])[i][j])[-3:-1]+"\t"
+                    chess_repr += file + str(rank) +':'+ str(self.game.brd[i][j])[-3:-1]+"\t"
             chess_repr += "\n"
             my_repr += chess_repr
         if False:
@@ -177,6 +213,8 @@ class Gamepiece():
     def __init__(self, type, file, rank, board):
         self.b_id = board.b_id
         self.piece_type = type
+        self.file = file
+        self.rank = rank
         self.piece_location = board.brd[file][rank]
         if type is not None:
             # square = self.get_square(file,rank)
@@ -184,58 +222,33 @@ class Gamepiece():
     #         self.place_piece(file,rank,type)  #returns a file,rank tuple
         self.capture = False    #capture
 
+    def fetch_piece(self):
+        return games[self.b_id].brd[self.file][self.rank]
+
     def place_piece(self, type):
         self.piece_location.piece = self
-        # games[self.b_id][file][rank].piece = self
-        # return file,rank
 
     def get_square(self):
         return self.piece_location
-        # file = self.piece_location[0]
-        # rank = self.piece_location[1]
-        # return games[self.b_id][file][rank]
 
     # def show_square(self):
     #     return str(self) + '@' + ''.join(map(str,self.piece_location))
 
-    def move_piece(self, x,y):
-        if self.islglmove(x,y):
-            # save location for reset
-            old = self.get_square()
-            board_move_history.append([self.piece_type,(old.file,old.rank),self.piece_location])
-            if games[self.b_id][x][y].has_piece():
-                #logic for capture made including points, and replacement(?)
-                print("Capture")
-                capture = games[self.b_id][x][y].piece
-                board_move_history[-1].extend(['captures',str(capture)])
-            self.piece_location = self.place_piece(x,y,self.piece_type)
-            old.reset_square()
-            # if self.get_square().location.board_solved():
-            if DEBUG:
-                print("debug - Move " + str(len(board_move_history)) + ":" + str(board_move_history[-1]))
+    def islglmove(self,x,y):
+        #logic for move by a queen along file or rank
+        if self.file is x or self.rank is y:
+            return True
+        #logic for move by queen along diag
+        elif abs(x - self.file) is abs(y - self.rank):
             return True
         else:
-            print("illegal move!")
-        return False 
+            return False
 
     def __str__(self):
         if self.piece_type is None:
             return ""
         return str(self.piece_type)
 
-class Queen(Gamepiece):
-    def __init__(self,f,r):
-        super().__init__("Qu",f,r)
-    
-    def islglmove(self,x,y):
-        #logic for move by a queen along file or rank
-        if self.piece_location[0] is x or self.piece_location[1] is y:
-            return True
-        #logic for move by queen along diag
-        elif abs(x - self.piece_location[0]) is abs(y - self.piece_location[1]):
-            return True
-        else:
-            return False
 
 def main():
     g = Game()
@@ -245,13 +258,16 @@ def main():
     g.new_game(Queens(10))
     g.new_game(Queens(12))
 
-    # for uuid in games:
+
+    for uuid in games:
         #Print the empty boards
         # print(g.fetch_board(uuid))
+        #test move a piece
+        g.fetch_board(uuid).brd[0][0].move_piece(1,1)
 
         #Solve them
         # Solutions.solveNQ(g.fetch_board(uuid).brd)
-        # print(g.fetch_board(uuid))
+        print(g.fetch_board(uuid))
 # 
 
 # #Unit Tests for Queen Gamepieces
