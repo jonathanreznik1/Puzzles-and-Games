@@ -5,6 +5,9 @@ import sys
 
 #TODO: 
 # 1) cleanup and simplify the design in this code, 
+#   a) place queens at locations by choice
+#   b) move placed queens from location to location by choice (no restriction other than has piece or not)
+#   c) logic for solutions of 8 queens game only, remove the regular chess elements like legal moves, etc.
 # 2) introduce gui elements, 
 # 3) introduce new functionality
 #   a) Finding more solutions using alg1, specify how many, maybe randomize the seed and count the # of operations
@@ -23,11 +26,9 @@ class Chesssquare():
         self.piece = Gamepiece(None,file,rank, board)
         self.reset_square()
 
-    def get_board_id(self):
-        return self.board.b_id
-
-    def get_piece_type(self):
-        return self.piece.piece_type
+    def set_piece(self,type):
+        self.piece = Gamepiece(type,self.location[0],self.location[1],self.board)
+        return True
 
     def move_piece(self, x,y):
         if self.piece.islglmove(x,y):
@@ -35,10 +36,10 @@ class Chesssquare():
             # old = self.get_square()
             move_history[self.get_board_id()].append([self.get_piece_type(),self.location,(x,y)])
             if self.get_board()[x][y].has_piece():
-                #logic for capture made including points, and replacement(?)
-                print("Capture")
-                capture = games[self.b_id][x][y].piece
-                move_history[-1].extend(['captures',str(capture)])
+                # #logic for capture made including points, and replacement(?)
+                # print("Capture")
+                # capture = games[self.b_id][x][y].piece
+                # move_history[-1].extend(['captures',str(capture)])
             self.get_board()[x][y].set_piece(self.get_piece_type())
             # self.piece_location = self.place_piece(x,y,self.piece_type)
             self.reset_square()
@@ -55,14 +56,17 @@ class Chesssquare():
             return False
         return True
 
-    def set_piece(self,type):
-        self.piece = Gamepiece(type,self.location[0],self.location[1],self.board)
-
     def get_piece(self):
         return self.piece
 
+    def get_piece_type(self):
+        return self.piece.piece_type
+
     def get_board(self):
         return self.board.brd
+
+    def get_board_id(self):
+        return self.board.b_id
 
     def reset_square(self):
         self.set_piece(None)
@@ -238,9 +242,13 @@ class Gamepiece():
     def islglmove(self,x,y):
         #logic for move by a queen along file or rank
         if self.file is x or self.rank is y:
+            if self.get_board()[x][y].has_piece():
+                return False
             return True
         #logic for move by queen along diag
         elif abs(x - self.file) is abs(y - self.rank):
+            if self.get_board()[x][y].has_piece():
+                return False
             return True
         else:
             return False
