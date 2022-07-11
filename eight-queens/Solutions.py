@@ -9,6 +9,35 @@ DEBUG = False
 # N = 4
 
 
+def board_solved_backtracking(self):
+    return False
+
+def board_solved_brute(self):
+    # O(n) algorithm for rows
+    for row in games[self.b_id]:
+        if [x.has_piece() for x in row].count(True) > 1:
+            print("unsolved - row with 2 pieces")
+            return False
+    # Algorithm for columns
+    for i in range(len(games[self.b_id])):
+        if [col[i].has_piece() for col in games[self.b_id]].count(True) > 1:
+            print("unsolved - col with 2 pieces")
+            return False
+
+def checkdiagonals():
+# Algorithm to check diagonals
+    # for a in [0,1,2,3]:
+    #     if [board[i+1][i].has_piece() for i in range(len(board))].count(True) > 1:
+    #         print("unsolved - diagonal with 2 pieces on it")
+    #     return False
+    # for a,b in [(0,0),(1,0),(0,1),(2,0),(0,2),(3,0),(0,3)]:
+    #     if [board[i+a][i+b].has_piece() for i in range(len(board))].count(True) > 1:
+    #         print("unsolved - diagonal with 2 pieces on it")
+    #     return False
+    return True
+
+
+
 def printSolution(board):
     if DEBUG:
         print("printSolution called from helper module Solutions.py")
