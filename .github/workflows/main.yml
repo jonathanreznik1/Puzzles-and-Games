@@ -26,6 +26,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: experiment
+          path: newtestfolder
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
