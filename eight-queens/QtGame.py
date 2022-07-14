@@ -1,4 +1,5 @@
 from Queens import Square, Queen, Board
+import Solutions
 import sys
 import os
 
@@ -52,7 +53,7 @@ class QTQueen(Queen,QtWidgets.QWidget):
         qp = QtGui.QPainter(self)
         size = min(self.width(), self.height())
         qp.drawPixmap(0, 0, self.image.scaled(
-            size, size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
+            size // 2, size // 2, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
 
 
 class QTBoard(Board,QtWidgets.QWidget):
@@ -113,11 +114,6 @@ class ChessGame(QtWidgets.QMainWindow):
         layout.addWidget(self.table)
 
 
-app = QtWidgets.QApplication(sys.argv)
-game = ChessGame()
-game.show()
-sys.exit(app.exec())
-
 def _enum(obj, name):
     parent, child = name.split('.')
     result = getattr(obj, child, False)
@@ -133,3 +129,33 @@ def _exec(obj):
         return obj.exec()
     else:
         return obj.exec_()
+
+
+def main(self):
+    app = QtWidgets.QApplication(sys.argv)
+    game = ChessGame()
+    game.show()
+    sys.exit(app.exec())
+
+#  #Testing#  Solution Algorithms #
+    # for game in games:
+        # if MODE_GAME == 1:
+            # if DEBUG:
+                # print("Solving...")
+            # Solutions.solveNQ(games[uuid])
+            # print(g)
+
+        # elif MODE_GAME == 2:
+            # Board.setup_queens(games[uuid])
+      
+
+
+        #Print the empty boards
+        # print(g.fetch_board(uuid))
+        #test move a piece
+        # g.fetch_board(uuid).brd[0][0].move_piece(1,1)
+
+        #Solve them
+        # Solutions.solveNQ(g.fetch_board(uuid).brd)
+
+# 
