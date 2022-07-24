@@ -10,20 +10,31 @@ except ImportError:
     from PySide6 import QtGui, QtWidgets, QtCore
     from PySide6.QtCore import Signal, Slot
 
-class QTSquare(Square,QtWidgets.QWidget):
+class ChessSquare(Square,QtWidgets.QWidget):
+    # clicked = QtCore.pyqtSignal(str)
+
     def __init__(self,board,file,rank,color):
         Square.__init__(self,board,file,rank)
-        QtWidgets.QWidget.__init__(self)
         self.type = color
         self.piece = None
         self.image = self.classify()
+        self.initUI()
+        
+    def initUI(self):
+        QtWidgets.QWidget.__init__(self)
         self.setMinimumSize(32, 32)
+        # self.clicked.connect(self.buttonClicked)
 
     def classify(self):
         if self.type == 0:
             return QtGui.QPixmap(os.path.join(os.path.dirname(__file__), '..', 'images', 'whitesquare.png'))
         elif self.type == 1:
             return QtGui.QPixmap(os.path.join(os.path.dirname(__file__), '..', 'images', 'blacksquare.png'))
+        elif self.type == 2:
+            return QtGui.QPixmap(os.path.join(os.path.dirname(__file__), '..', 'images', 'whitesquare-selected.png'))
+        elif self.type == 3:
+            return QtGui.QPixmap(os.path.join(os.path.dirname(__file__), '..', 'images', 'blacksquare-selected.png'))
+        
 
     def paintEvent(self, event):
         qp = QtGui.QPainter(self)
@@ -31,6 +42,15 @@ class QTSquare(Square,QtWidgets.QWidget):
         qp.drawPixmap(0, 0, self.image.scaled(
             size, size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
 
+        
+    def mousePressEvent(self, event):
+        if event.button() == QtCore.Qt.MouseButton.LeftButton:
+            self.type = (self.type + 1) % 2
+            self.image = self.classify()
+            self.update()
+        else:
+            return QWidget.mousePressEvent(self,event)
+        # self.repaint()
 
 class ClickableLabel(QtWidgets.QLabel):
     clicked = QtCore.pyqtSignal(str)
@@ -53,13 +73,16 @@ class ClickableLabel(QtWidgets.QLabel):
 #         super().__init__()
 
 
-class QTQueen(Piece,QtWidgets.QLabel):
+class ChessPiece(Piece,QtWidgets.QLabel):
     def __init__(self,type,file,rank,board):
         Piece.__init__(self,type,file,rank,board)
-        QtWidgets.QLabel.__init__(self)
         self.image = QtGui.QPixmap(os.path.join(os.path.dirname(__file__), '..', 'images', 'whitequeen.png'))
-        self.setMinimumSize(32, 32)
         self.initUI()
+    
+    def initUI(self):
+        QtWidgets.QLabel.__init__(self)
+        self.setMinimumSize(32, 32)
+        self.setAcceptDrops(True)
 
     def paintEvent(self, event):
         qp = QtGui.QPainter(self)
@@ -67,31 +90,37 @@ class QTQueen(Piece,QtWidgets.QLabel):
         qp.drawPixmap(0 + size // 4, 0 + size // 4, self.image.scaled(
             size // 2, size // 2, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
 
-    def initUI(self):
+    def mousePressEvent(self, event):
 
-        self.setAcceptDrops(True)
+        if (event.button() == QtCore.Qt.MouseButton.LeftButton
+            # and iconLabel.geometry().contains(event.pos())
+            ):
+            drag = QtGui.QDrag(self)
+            mimeData = QtGui.QMimeData
+            mimeData.setImageData(self.image)
+            drag.setMimeData(mimeData)
+            drag.setPixmap(self.image)
+            dropAction = drag.exec()
         # self.button = Button('Button', self)
         # self.button.move(100, 65)
 
         # self.setWindowTitle('Click or Move')
         # self.setGeometry(300, 300, 550, 450)
 
-
     def dragEnterEvent(self, e):
-
         e.accept()
 
 
     def dropEvent(self, e):
-
-        position = e.position()
-        self.image.move(position.toPoint())
+        self.get_square().set_piece("Qu")
+        # position = e.position()
+        # self.image.move(position.toPoint())
 
         e.setDropAction(QtCore.Qt.DropAction.MoveAction)
         e.accept()
         
 
-class QTBoard(Board,QtWidgets.QWidget):
+class ChessBoard(Board,QtWidgets.QWidget):
     def __init__(self):
         Board.__init__(self,8)
         QtWidgets.QWidget.__init__(self)
@@ -105,17 +134,17 @@ class QTBoard(Board,QtWidgets.QWidget):
             layout.setColumnStretch(row, 1)
             for col in range(8):
                 if col % 2 == 0 and row % 2 == 0:
-                    layout.addWidget(QTSquare(self,col,row,0), row, col)
+                    layout.addWidget(ChessSquare(self,col,row,0), row, col)
                 elif col % 2 == 1 and row % 2 == 1:
-                    layout.addWidget(QTSquare(self,col,row,0), row, col)
+                    layout.addWidget(ChessSquare(self,col,row,0), row, col)
                 elif col % 2 == 1 and row % 2 == 0:
-                    layout.addWidget(QTSquare(self,col,row,1), row, col)
+                    layout.addWidget(ChessSquare(self,col,row,1), row, col)
                 elif col % 2 == 0 and row % 2 == 1:
-                    layout.addWidget(QTSquare(self,col,row,1), row, col)
+                    layout.addWidget(ChessSquare(self,col,row,1), row, col)
 
                 #add queens along diag
         # for row in range(8):
-            layout.addWidget(QTQueen("Qu",col,row,self), row, 0)
+            layout.addWidget(ChessPiece("Qu",col,row,self), row, 0)
 
 
     def minimumSizeHint(self):
@@ -144,7 +173,7 @@ class ChessGame(Game,QtWidgets.QMainWindow):
         central = QtWidgets.QWidget()
         self.setCentralWidget(central)
         layout = QtWidgets.QHBoxLayout(central)
-        self.board = QTBoard()
+        self.board = ChessBoard()
         layout.addWidget(self.board)
         # self.table = QtWidgets.QTableWidget(1, 3)
         # layout.addWidget(self.table)
