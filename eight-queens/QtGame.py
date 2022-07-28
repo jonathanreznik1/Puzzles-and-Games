@@ -32,23 +32,27 @@ class ChessBoard(Board,QtWidgets.QWidget):
         layout = QtWidgets.QGridLayout(self)
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
-        self.setAcceptDrops(True)           #event handling for moves
 
-        for row in range(8):
+        #event handling for moves
+        self.setAcceptDrops(True)           
+
+        ##Construct the board
+        for row in range(self.b_size):
             layout.setRowStretch(row, 1)
             layout.setColumnStretch(row, 1)
-            for col in range(8):
+            for col in range(self.b_size):
                 if col % 2 == 0 and row % 2 == 0:
-                    layout.addWidget(ChessSquare(self,col,row,0), row, col)
+                    layout.addWidget(ChessSquare(self,row,col,0), row, col)
                 elif col % 2 == 1 and row % 2 == 1:
-                    layout.addWidget(ChessSquare(self,col,row,0), row, col)
+                    layout.addWidget(ChessSquare(self,row,col,0), row, col)
                 elif col % 2 == 1 and row % 2 == 0:
-                    layout.addWidget(ChessSquare(self,col,row,1), row, col)
+                    layout.addWidget(ChessSquare(self,row,col,1), row, col)
                 elif col % 2 == 0 and row % 2 == 1:
-                    layout.addWidget(ChessSquare(self,col,row,1), row, col)
+                    layout.addWidget(ChessSquare(self,row,col,1), row, col)
 
-            #add some pieces to the puzzle board
-            layout.addWidget(ChessPiece("Qu",col,row,self), row, 0)
+        # add some pieces to the puzzle board
+        for rank in range(self.b_size):
+            layout.addWidget(ChessPiece("Qu",rank,rank,self), rank, rank)
 
     #Painting and Sizing
     def minimumSizeHint(self):
@@ -67,17 +71,51 @@ class ChessBoard(Board,QtWidgets.QWidget):
     def dragEnterEvent(self, e):
         e.accept()
 
+    def listchildWidgets(self):
+        #print the square and pieces
+        print(self.findChildren(QtWidgets.QWidget))
+        #print the pieces
+        #print(self.findChildren(QtWidgets.QLabel))
+
+    def listChildWidget(self):
+        print(self.findChild(QtWidgets.QWidget))
+
+    def listLayoutChildWidgets(self):
+        # print(self.layout.findChild(QWidget))
+        for i in range(self.layout.count()):
+            print(self.layout.itemAt(i).widget().text())        
+    def mousePressEvent(self, event):
+        self.listchildWidgets()
+        # self.listLayoutChildWidgets()
+        # self.listChildWidget()
+        return
+        piece = self.childAt(event.pos())
+        del piece
+        if (event.button() == QtCore.Qt.MouseButton.LeftButton
+              # and event.pos() 
+            # and iconLabel.geometry().contains(event.pos())
+            ):
+            if self.childAt(event.pos()).has_piece():
+                drag = QtGui.QDrag(self)
+                mimeData = QtCore.QMimeData()
+                mimeData.setImageData(QtGui.QImage(self.childAt(event.pos()).image_dest))
+                drag.setMimeData(mimeData)
+                drag.setPixmap(self.childAt(event.pos()).image)
+                dropAction = drag.exec()
+        elif (event.button() == QtCore.Qt.MouseButton.RightButton):
+            print(event.pos())    
+
 class ChessSquare(Square,QtWidgets.QWidget):
-    def __init__(self,board,file,rank,color):
-        Square.__init__(self,board,file,rank)
+    def __init__(self,board,rank,file,color):
+        Square.__init__(self,board,rank,file)
         self.color = color
-        # self.image = self.set_image()
-        self.image = self.initUI()
+        self.image = self.set_image()
+        # self.image = self.initUI()
+        self.initUI()
         
     def initUI(self):
         QtWidgets.QWidget.__init__(self)
         self.setMinimumSize(32, 32)
-        self.set_image()
 
     def set_image(self):
         if self.color == 0:
@@ -96,7 +134,12 @@ class ChessSquare(Square,QtWidgets.QWidget):
         qp.drawPixmap(0, 0, self.image.scaled(
             size, size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
 
-        
+    def __str__(self):
+        return str(self.get_piece_type()) + '@' + ''.join(map(str,(chr(ord('A') + (Square.fetch_board(self).b_size - 1) - self.location[0]),Square.fetch_board(self).b_size - self.location[1])))
+
+    # def __repr__(self):
+        # return str(self.piece_type) + '@' + ''.join(map(str,(chr(ord('A') + (self.fetch_board(self).b_size - 1) - self.location[0]),self.fetch_board(self).b_size - self.location[1])))
+
     # def mousePressEvent(self, event):
     #     if event.button() == QtCore.Qt.MouseButton.LeftButton:
     #         self.type = (self.type + 2) % 4
@@ -144,17 +187,19 @@ class ChessPiece(Piece,QtWidgets.QLabel):
         qp.drawPixmap(0 + size // 4, 0 + size // 4, self.image.scaled(
             size // 2, size // 2, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
 
-    def mousePressEvent(self, event):
-        if (event.button() == QtCore.Qt.MouseButton.LeftButton
-              and event.pos() 
-            # and iconLabel.geometry().contains(event.pos())
-            ):
-            drag = QtGui.QDrag(self)
-            mimeData = QtCore.QMimeData()
-            mimeData.setImageData(QtGui.QImage(self.image_dest))
-            drag.setMimeData(mimeData)
-            drag.setPixmap(self.image)
-            dropAction = drag.exec()
+    # def mousePressEvent(self, event):
+        # if (event.button() == QtCore.Qt.MouseButton.LeftButton
+              # # and event.pos() 
+            # # and iconLabel.geometry().contains(event.pos())
+            # ):
+            # drag = QtGui.QDrag(self)
+            # mimeData = QtCore.QMimeData()
+            # mimeData.setImageData(QtGui.QImage(self.image_dest))
+            # drag.setMimeData(mimeData)
+            # drag.setPixmap(self.image)
+            # dropAction = drag.exec()
+        # elif (event.button() == QtCore.Qt.MouseButton.RightButton):
+            # print(event.pos())
 
     def dragEnterEvent(self, e):
         e.accept()
