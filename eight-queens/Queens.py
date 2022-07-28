@@ -249,9 +249,28 @@ def main():
         print(g.fetch_board(board).game_summary())
 
     
+#######     TESTING     ######################
+# # Solutions Algorithms               # #
+##############################################
+    # for game in games:
+        # if MODE_GAME == 1:
+            # if DEBUG:
+                # print("Solving...")
+            # Solutions.solveNQ(games[uuid])
+            # print(g)
+
+        # elif MODE_GAME == 2:
+            # Board.setup_queens(games[uuid])
+      
 
 
-    
+        #Print the empty boards
+        # print(g.fetch_board(uuid))
+        #test move a piece
+        # g.fetch_board(uuid).brd[0][0].move_piece(1,1)
+
+        #Solve them
+        # Solutions.solveNQ(g.fetch_board(uuid).brd)
 
 main()
 
