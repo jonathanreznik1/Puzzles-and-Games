@@ -2,12 +2,12 @@ import uuid
 import sys
 
 #TODO: 
-# 1) cleanup and simplify the design in this code, 
-# 2) introduce gui elements, 
+# 1) cleanup and simplify design 
+# 2) introduce gui elements 
 # 3) Solutions file for single board
-# 4) Expand to multiple solutions and concurrency
-#   a) Implement Backtracking algorithm, compare the efficiency of the two algorithms
-#   b) Interactive cycling through the solutions, maybe using a file to store or check solutions
+#   Implement Backtracking algorithm, compare the efficiency of the two algorithms
+# 4) Expand on solutions introducing concurrency
+#   Interactive cycling through the solutions, maybe using a file to store or check solutions
 # 5) Create HINT feature with some AI or greedy algorithm
 
 # python 8 queens problem
@@ -22,7 +22,7 @@ class Piece():
     def __init__(self, piece_type, file, rank, board):
         self.b_id = board.b_id
         self.p_location = (file,rank)
-        self.piece_type = piece_type
+        self.p_type = piece_type
     
     def fetch_board(self):
         return games[self.b_id]
@@ -43,7 +43,7 @@ class Piece():
         sqr = Board.fetch_square(b,x,y)
         
         if not sqr.has_piece():
-            move_history[self.b_id].append([self.piece_type,self.p_location,(x,y)])
+            move_history[self.b_id].append([self.p_type,self.p_location,(x,y)])
             old_square = b[file][rank]
             b[x][y].piece = self
             self.p_location = (x,y)
@@ -54,12 +54,9 @@ class Piece():
             return False  
         
     def __str__(self):
-        if self.piece_type is "QUEEN":
+        if self.p_type is "QUEEN":
             return "Qu"
-        return ""
-    
-    # def __repr__(self):
-        # return self.get_piece_type() + '@' + ''.join(map(str,(chr(ord('A') + self.location[0]),self.fetch_board(self).b_size - self.location[1])))
+        # return self.p_type + '@' + ''.join(map(str,(chr(ord('A') + self.location[0]),self.fetch_board(self).b_size - self.location[1])))
         
 
 class Square():
@@ -102,7 +99,7 @@ class Square():
         return 
 
     def has_piece(self):
-        if self.piece.piece_type is None:
+        if self.piece.p_type is None:
             return False
         return True
 
@@ -110,13 +107,13 @@ class Square():
         self.set_piece(None)
 
     def __str__(self):
-        if self.piece.piece_type is None:
+        if self.piece.p_type is None:
             return ""
         return "%s%s" % (self.location[1], self.location[0]) + ":" + "%s\t" % (self.piece)
 
     def __repr__(self):
         if self.has_piece():
-            return self.piece.piece_type
+            return self.piece.p_type
         return "Square"
         
 class Board():
@@ -243,12 +240,12 @@ def main():
     for uuid in games:
         brd = g.fetch_board(uuid)
         sqr = brd.fetch_square(brd.brd,0,0)
-    if sqr.has_piece():
-        piece = sqr.get_piece()
-        if brd.fetch_square(brd.brd,0,6).has_piece():
-            raise Exception('not a legal move')
-        else:
-            piece.move_queen(brd.fetch_square(brd.brd,0,6))
+        if sqr.has_piece():
+            piece = sqr.get_piece()
+            if brd.fetch_square(brd.brd,0,6).has_piece():
+                raise Exception('not a legal move')
+            else:
+                piece.move_queen(brd.fetch_square(brd.brd,0,6))
 
     for board in games:
         print(g.fetch_board(board))

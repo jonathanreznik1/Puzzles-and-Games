@@ -134,8 +134,8 @@ class ChessSquare(Square,QtWidgets.QWidget):
         qp.drawPixmap(0, 0, self.image.scaled(
             size, size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
 
-    def __str__(self):
-        return str(self.get_piece_type()) + '@' + ''.join(map(str,(chr(ord('A') + (Square.fetch_board(self).b_size - 1) - self.location[0]),Square.fetch_board(self).b_size - self.location[1])))
+    # def __str__(self):
+    #     return str(self.get_piece_type()) + '@' + ''.join(map(str,(chr(ord('A') + (Square.fetch_board(self).b_size - 1) - self.location[0]),Square.fetch_board(self).b_size - self.location[1])))
 
     # def __repr__(self):
         # return str(self.piece_type) + '@' + ''.join(map(str,(chr(ord('A') + (self.fetch_board(self).b_size - 1) - self.location[0]),self.fetch_board(self).b_size - self.location[1])))
