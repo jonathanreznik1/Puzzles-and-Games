@@ -1,14 +1,21 @@
 import uuid
 import sys
 
-#TODO: 
-# 1) cleanup and simplify design 
-# 2) introduce gui elements 
-# 3) Solutions file for single board
-#   Implement Backtracking algorithm, compare the efficiency of the two algorithms
-# 4) Expand on solutions introducing concurrency
-#   Interactive cycling through the solutions, maybe using a file to store or check solutions
-# 5) Create HINT feature with some AI or greedy algorithm
+#PROJECT TODO LIST: 
+# 1) Queens.py
+#   a. simplify the program
+#   b. remove global vars if possible
+#   c. cleanup the unused functions
+# 2) QtGame.py
+#   a. introduce gui elements
+#   b. Interactive cycling through the solutions
+# 3) Solutions.py
+#   a. Implement Backtracking algorithm
+#   b. Compare the efficiency of the two algorithms
+#   c. Expand on solutions introducing concurrency
+# 4) Other
+#   a.  using a file to store or check solutions
+#   b.  Create HINT feature with some AI or greedy algorithm
 
 # python 8 queens problem
 DEBUG = True
@@ -18,45 +25,50 @@ MODE_GAME = 2
 
 
 class Piece():
-#A piece is placed on a square at a specific file and rank
-    def __init__(self, piece_type, file, rank, board):
+    def __init__(self, chesspiece, file, rank, board):
         self.b_id = board.b_id
         self.p_location = (file,rank)
-        self.p_type = piece_type
+        self.p_type = chesspiece
     
-    def fetch_board(self):
-        return games[self.b_id]
-
-    # def fetch_square(self):
-        # file = self.location[0]
-        # rank = self.location[1]
-        # return games[self.b_id].brd[rank][file]            
+    '''Assign piece to a square.        Args: self, square         Returns: None   
+        '''
+    def set_square(self, square):
+        square.piece = self
         
+    '''Moves piece to an empty square.        Args: self, square        Returns:  (x,y) location '''
     def move_queen(self,square):
-    #Move piece from current location to x,y
-        file = self.p_location[0]
-        rank = self.p_location[1]
-        
-        board = self.fetch_board()
-        b = board.brd                     #brd is a 2d list structure
+    
+        #Get the Board
+        B = Game.fetch_board(self)          
+        # B = games[self.b_id]
         x,y = square.get_location()
-        sqr = Board.fetch_square(b,x,y)
-        
+        sqr = Board.fetch_square(B.brd,x,y)
+
+        #Check for piece and raise exception if so
         if not sqr.has_piece():
-            move_history[self.b_id].append([self.p_type,self.p_location,(x,y)])
-            old_square = b[file][rank]
-            b[x][y].piece = self
+            
+            #Store the current location in sq
+            file = self.p_location[0]
+            rank = self.p_location[1]
+            sq = B.brd[file][rank]
+            
+            #Move piece and add to move history
+            self.set_square(B.brd[x][y])
+            Game.move_history[self.b_id].append([self.p_type,self.p_location,(x,y)])
             self.p_location = (x,y)
-            old_square.reset_square()
+
+            #Cleanup the old square and return the new location
+            sq.reset_piece()
             return self.p_location
+            
         else:
             raise Exception("Illegal Move, piece already exists there.")
             return False  
-        
+    
+    '''String override method'''
     def __str__(self):
         if self.p_type is "QUEEN":
             return "Qu"
-        # return self.p_type + '@' + ''.join(map(str,(chr(ord('A') + self.location[0]),self.fetch_board(self).b_size - self.location[1])))
         
 
 class Square():
@@ -64,47 +76,28 @@ class Square():
         self.b_id = board.b_id
         self.piece = Piece(None,file,rank,board)
         self.location = (rank, file)                     #rank location[0], file location[1]
-        self.board = board.brd
-        self.reset_square()                             #new squares piece type set to None
-
-    def get_piece(self):
-        return self.piece
-       
-    def get_location(self):
-        return self.location[0],self.location[1]
-        
-       
-    def get_rank(self):
-    #actual rank counts down from b_size to 1
-        return self.get_board_size() - self.location[0]
-
-    def get_file(self):
-        return chr(ord('A')+self.location[1])
-
-    def fetch_board(self):
-        return games[self.b_id]
-        
-    def get_board_data(self):
-        return self.board
-
-    def get_board_id(self):
-        return self.b_id
-        
-    def get_board_size(self):
-        board = self.fetch_board()
-        return board.b_size
-
-    def set_piece(self,p_type):
-        self.piece = Piece(p_type,self.location[1],self.location[0],self.fetch_board())  #relies on garbage collection for old piece
-        return 
 
     def has_piece(self):
         if self.piece.p_type is None:
             return False
         return True
 
-    def reset_square(self):
-        self.set_piece(None)
+    def reset_piece(self):
+        self.piece = Piece(None,self.location[1],self.location[0],Game.fetch_board(self))
+        
+    def get_piece(self):
+        return self.piece
+       
+    '''Show rank of square        Args: self        Returns: integer value from 1 to b_size '''
+    def get_rank(self):
+        return self.get_board_size() - self.location[0]
+
+    '''Show file of square        Args: self        Returns: character from A to ?'''
+    def get_file(self):
+        return chr(ord('A')+self.location[1])
+                
+    def get_location(self):
+        return self.location[0],self.location[1]
 
     def __str__(self):
         if self.piece.p_type is None:
@@ -117,93 +110,65 @@ class Square():
         return "Square"
         
 class Board():
-    def __init__(self, grid_size):
-        self.b_size = grid_size
-        self.b_id = uuid.uuid1()
-        self.brd = [[None for i in range(grid_size)] for i in range(grid_size)]     
-        self.add_to_games()
-        self.make_chessboard()          
+    def __init__(self, dimensions):
+        self.b_dim = dimensions
         self.b_solved = False
-    
-    def make_chessboard(self):
-        #i is the complement of rank and j is the complement of file for boardsize
-        for i in range(self.b_size):
-            for j in range(self.b_size):
-                self.brd[i][j] = (Square(self,i,j)) #create board with squaress
+        self.b_id = uuid.uuid1()        #assigns a unique id
+        self.brd = [[Square(self,i,j) for j in range(dimensions)] for i in range(dimensions)]       
 
-    def add_to_games(self):
-        games[self.b_id] =  self                    #map board to games
-
-    # def game_summary(self):
-        # return 
-
-    def get_board(self):
-        return self.brd
-       
+    '''The static Board.fetch_square() method returns a Square object'''
     @staticmethod
     def fetch_square(board,rank,file):
         return board[rank][file]
-      
+    
+    '''The static Board.setup_queens() method places Queen pieces on the diagonal of squares'''
     @staticmethod
     def setup_queens(board):
-        for i in board.brd:
-            i[0].set_piece("QUEEN")
- 
+        for i,item in enumerate(board.brd):
+            item[0].piece = Piece("QUEEN",i,i,board)
+
     def __repr__(self):
         my_repr = ''
         chess_repr = "Chessboard (CLI) Representation:\n"
         if self.b_solved:
             chess_repr += "Board Solved!\n"
-        dim = self.b_size
-        rank = dim
-        for i in range(dim):
+        rank = self.b_dim
+        for i in range(self.b_dim):
             file = 'A'
             if i > 0:
                 rank -= 1
                 chess_repr += "\n"
-            for j in range(dim):
+            for j in range(self.b_dim):
                 if j > 0:
                     file = chr(ord(file) + 1)
                 chess_repr += file + str(rank) +':'+ str(self.brd[i][j])[-3:-1]+"\t"
         chess_repr += "\n"
         my_repr += chess_repr
         if DEBUG:
-            my_repr += "Data Representation:\n" + "".join(map(''.join,str(games[self.b_id].brd))) + "\n"
+            my_repr += "Data Representation:\n" + "".join(map(''.join,str(Game.games[self.b_id].brd))) + "\n"
         if MOVE_DEBUG:
-            my_repr += "Game Representation:\n" + "".join(str(x) for x in move_history[self.b_id])
+            my_repr += "Game Move Representation:\n" + "".join(str(x) for x in Game.move_history[self.b_id])
         return my_repr
-
-
-    # def board_solved(self):
-        # algorithm_flag = 1
-        # if algorithm_flag == 1:
-            # self.board_solved_brute()
-        # if algorithm_flag == 2:
-            # self.board_solved_backtracking()
-            
-
-
         
 class Game():
-    def __init__(self):
-        global games
-        games = {}
+    games = dict()
+    move_history = {}
 
-        global move_history
-        move_history = {}
-  
+    def __init__(self):
         self.b_game_mode = MODE_GAME    # 1,2  for auto/interactive
 
+    '''The static Game.fetch_board() method returns a Board object'''
     @staticmethod
-    def fetch_board(board):
-        return games[board]
-
-    @staticmethod
-    def new_game(board):
+    def fetch_board(item):
+        return Game.games[item.b_id] 
+        
+    def new_game(self,board):
         if DEBUG:
             print("newboard: " + str(board.b_id))
-        games[board.b_id] = board
-        move_history[board.b_id] = []
+        
+        self.games[board.b_id] = board           #map board to games
+
+        self.move_history[board.b_id] = []
 
 
 def main():
@@ -219,11 +184,11 @@ def main():
     # g.new_game(Board(12))
 
     #Show the CLI output of squares with no pieces
-    for uuid in games:
+    for uuid in g.games.values():
         print(g.fetch_board(uuid))
 
     #Call setup_queens()
-    for uuid in games:
+    for uuid in g.games.values():
         Board.setup_queens(g.fetch_board(uuid))
         print(g.fetch_board(uuid))
 
@@ -237,17 +202,17 @@ def main():
     #N/A
 
     #Test of allowable moves
-    for uuid in games:
+    for uuid in g.games.values():
         brd = g.fetch_board(uuid)
-        sqr = brd.fetch_square(brd.brd,0,0)
+        sqr = Board.fetch_square(brd.brd,0,0)
         if sqr.has_piece():
             piece = sqr.get_piece()
-            if brd.fetch_square(brd.brd,0,6).has_piece():
+            if Board.fetch_square(brd.brd,0,6).has_piece():
                 raise Exception('not a legal move')
             else:
-                piece.move_queen(brd.fetch_square(brd.brd,0,6))
+                piece.move_queen(Board.fetch_square(brd.brd,0,6))
 
-    for board in games:
+    for board in g.games.values():
         print(g.fetch_board(board))
     
     

@@ -37,10 +37,10 @@ class ChessBoard(Board,QtWidgets.QWidget):
         self.setAcceptDrops(True)           
 
         ##Construct the board
-        for row in range(self.b_size):
+        for row in range(self.b_dim):
             layout.setRowStretch(row, 1)
             layout.setColumnStretch(row, 1)
-            for col in range(self.b_size):
+            for col in range(self.b_dim):
                 if col % 2 == 0 and row % 2 == 0:
                     layout.addWidget(ChessSquare(self,row,col,0), row, col)
                 elif col % 2 == 1 and row % 2 == 1:
@@ -51,7 +51,7 @@ class ChessBoard(Board,QtWidgets.QWidget):
                     layout.addWidget(ChessSquare(self,row,col,1), row, col)
 
         # add some pieces to the puzzle board
-        for rank in range(self.b_size):
+        for rank in range(self.b_dim):
             layout.addWidget(ChessPiece("Qu",rank,rank,self), rank, rank)
 
     #Painting and Sizing
