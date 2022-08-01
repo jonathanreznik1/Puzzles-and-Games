@@ -34,6 +34,16 @@ class Piece():
         '''
     def set_square(self, square):
         square.piece = self
+
+    def is_piece(self):
+        if self.p_type is None:
+            return False
+        return True
+
+    # def fetch_square(self):
+        # file = self.location[0]
+        # rank = self.location[1]
+        # return games[self.b_id].brd[rank][file]            
         
     '''Moves piece to an empty square.        Args: self, square        Returns:  (x,y) location '''
     def move_queen(self,square):

@@ -9,13 +9,6 @@ DEBUG = False
 # N = 4
 
 
-    # def board_solved(self):
-        # algorithm_flag = 1
-        # if algorithm_flag == 1:
-            # self.board_solved_brute()
-        # if algorithm_flag == 2:
-            # self.board_solved_backtracking()
-            
 def board_solve(arg):
     if arg == 1:
         board_solved_backtracking(self)
