@@ -9,11 +9,11 @@ DEBUG = False
 # N = 4
 
 
-def board_solve(arg):
-    if arg == 1:
-        board_solved_backtracking(self)
-    elif arg == 2:
-        board_solved_bruteforce(self)
+# def board_solve(arg):
+#     if arg == 1:
+#         board_solved_backtracking(self)
+#     elif arg == 2:
+#         board_solved_bruteforce(self)
 
 def board_solved_backtracking(self):
     return False

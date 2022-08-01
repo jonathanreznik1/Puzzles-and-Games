@@ -27,6 +27,11 @@ class Piece():
     def fetch_board(self):
         return games[self.b_id]
 
+    def is_piece(self):
+        if self.p_type is None:
+            return False
+        return True
+
     # def fetch_square(self):
         # file = self.location[0]
         # rank = self.location[1]
