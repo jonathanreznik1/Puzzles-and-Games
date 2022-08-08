@@ -52,7 +52,9 @@ class ChessBoard(Board,QtWidgets.QWidget):
 
         # add some pieces to the puzzle board
         for rank in range(self.b_dim):
-            layout.addWidget(ChessPiece("Qu",rank,rank,self), rank, rank)
+            widget = ChessPiece("QUEEN",rank,rank,self)
+            widget.set_square(self.brd[rank][rank])
+            layout.addWidget(widget, rank, rank)
 
     #Painting and Sizing
     def minimumSizeHint(self):
@@ -91,23 +93,31 @@ class ChessBoard(Board,QtWidgets.QWidget):
         # self.listChildWidget()
         #return
         s = self.childAt(event.pos())
-        board = s.fetch_board()
+        board = ChessGame.fetch_board(s)
         try:
             if s.is_piece():
                 x = s.p_location[0]    #file of Piece objects and rank of Square objects
                 y = s.p_location[1]    #file of Square objects and rank of Piece objects
-                print(board.brd[y][x])
-                # board.brd[y][x].reset_square()
+                #print(board.brd[y][x])
+                board.brd[y][x].reset_piece()
                 # print(board.brd[y][x].piece)
                 # s.update()
-                print("try")
+                ChessGame.gui_games[s.b_id].repaint()
+                #print(ChessGame.gui_games[s.b_id][y][x])
+                #.update()
+                #ChessGame.gui_games[s.b_id][x][y].update()
+                #.get_parent_widget().update()
+                #print(str(board.brd))
         except:
             if not s.has_piece():
                 x = s.location[0]    #file of Piece objects and rank of Square objects
                 y = s.location[1]    #file of Square objects and rank of Piece objects
-                board.brd[x][y].set_piece("QUEEN")
-                s.update()
-                print("except")
+                new = Piece("QUEEN",x,y,board)
+                new.set_square(board.brd[x][y])
+                #board.brd[x][y].set_piece("QUEEN")
+                #ChessGame.update()
+                print(ChessGame.gui_games[s.b_id])
+                #print(str(board.brd))
 
         # if (event.button() == QtCore.Qt.MouseButton.LeftButton
         #       # and event.pos() 
@@ -205,6 +215,9 @@ class ChessPiece(Piece,QtWidgets.QLabel):
         qp.drawPixmap(0 + size // 4, 0 + size // 4, self.image.scaled(
             size // 2, size // 2, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
 
+    def get_parent_widet(self):
+       return 
+
     # def mousePressEvent(self, event):
         # if (event.button() == QtCore.Qt.MouseButton.LeftButton
               # # and event.pos() 
@@ -246,9 +259,13 @@ class ChessPiece(Piece,QtWidgets.QLabel):
 
 
 class ChessGame(Game,QtWidgets.QMainWindow):
+    gui_games = dict()
+    
     def __init__(self):
         Game.__init__(self)
         self.board = ChessBoard()
+        self.gui_newgame(self.board)
+        #self.games[self.board.b_id]=self.board
         self.initUI()
 
     def initUI(self):
@@ -264,6 +281,13 @@ class ChessGame(Game,QtWidgets.QMainWindow):
         quit.clicked.connect(QtWidgets.QApplication.quit)
         layout.addWidget(quit)
 
+    def gui_newgame(self,gui_board):
+        self.games[gui_board.b_id] = gui_board
+        self.gui_games[gui_board.b_id] = gui_board
+
+    @staticmethod
+    def fetch_board(item):
+        return ChessGame.gui_games[item.b_id]
 
 
 def _enum(obj, name):

@@ -18,9 +18,10 @@ import sys
 #   b.  Create HINT feature with some AI or greedy algorithm
 
 # python 8 queens problem
+
+#probably combine these?
 DEBUG = True
-MOVE_DEBUG = True
-CLI_MODE = False
+CLI_MODE = True
 MODE_GAME = 2
 
 
@@ -49,7 +50,7 @@ class Piece():
     def move_queen(self,square):
     
         #Get the Board
-        B = Game.fetch_board(self)          
+        B = Game.fetch_board(self.b_id)          
         # B = games[self.b_id]
         x,y = square.get_location()
         sqr = Board.fetch_square(B.brd,x,y)
@@ -77,7 +78,7 @@ class Piece():
     
     '''String override method'''
     def __str__(self):
-        if self.p_type is "QUEEN":
+        if self.p_type == "QUEEN":
             return "Qu"
         
 
@@ -93,7 +94,7 @@ class Square():
         return True
 
     def reset_piece(self):
-        self.piece = Piece(None,self.location[1],self.location[0],Game.fetch_board(self))
+        self.piece = Piece(None,self.location[1],self.location[0],Game.fetch_board(self.b_id))
         
     def get_piece(self):
         return self.piece
@@ -139,25 +140,24 @@ class Board():
 
     def __repr__(self):
         my_repr = ''
-        chess_repr = "Chessboard (CLI) Representation:\n"
-        if self.b_solved:
-            chess_repr += "Board Solved!\n"
-        rank = self.b_dim
-        for i in range(self.b_dim):
-            file = 'A'
-            if i > 0:
-                rank -= 1
-                chess_repr += "\n"
-            for j in range(self.b_dim):
-                if j > 0:
-                    file = chr(ord(file) + 1)
-                chess_repr += file + str(rank) +':'+ str(self.brd[i][j])[-3:-1]+"\t"
-        chess_repr += "\n"
-        my_repr += chess_repr
+        if CLI_MODE:
+            chess_repr = "Chessboard (CLI) Representation:\n"
+            if self.b_solved:
+                chess_repr += "Board Solved!\n"
+            rank = self.b_dim
+            for i in range(self.b_dim):
+                file = 'A'
+                if i > 0:
+                    rank -= 1
+                    chess_repr += "\n"
+                for j in range(self.b_dim):
+                    if j > 0:
+                        file = chr(ord(file) + 1)
+                    chess_repr += file + str(rank) +':'+ str(self.brd[i][j])[-3:-1]+"\t"
+            chess_repr += "\n"
+            my_repr += chess_repr
         if DEBUG:
             my_repr += "Data Representation:\n" + "".join(map(''.join,str(Game.games[self.b_id].brd))) + "\n"
-        if MOVE_DEBUG:
-            my_repr += "Game Move Representation:\n" + "".join(str(x) for x in Game.move_history[self.b_id])
         return my_repr
         
 class Game():
@@ -169,8 +169,8 @@ class Game():
 
     '''The static Game.fetch_board() method returns a Board object'''
     @staticmethod
-    def fetch_board(item):
-        return Game.games[item.b_id] 
+    def fetch_board(uuid):
+        return Game.games[uuid] 
         
     def new_game(self,board):
         if DEBUG:
@@ -179,84 +179,95 @@ class Game():
         self.games[board.b_id] = board           #map board to games
 
         self.move_history[board.b_id] = []
+        
+    def __str__(self):
+        my_str = ""
+        for uuid in Game.games:
+            my_str += self.fetch_board(uuid).__str__()
+        return my_str
 
 
 def main():
     g = Game()
 
 #######     TESTING     ######################
-# #game setup of Board.setup_queens        # #
+## game setup of Board.setup_queens         ##
 ##############################################
 
-    #Create three new boards of different sizes
+   ##Create three new boards of different sizes
     g.new_game(Board(8))
     g.new_game(Board(10))
-    # g.new_game(Board(12))
+    g.new_game(Board(12))
 
-    #Show the CLI output of squares with no pieces
-    for uuid in g.games.values():
-        print(g.fetch_board(uuid))
-
-    #Call setup_queens()
-    for uuid in g.games.values():
+   ##Show the CLI output of squares with no pieces
+    print(g)
+   
+    ##Call setup_queens()
+    for uuid in g.games:
         Board.setup_queens(g.fetch_board(uuid))
-        print(g.fetch_board(uuid))
+    print(g)
+        #print(g.fetch_board(uuid))
 
+       
+
+#######     TESTING     ###############
+##    Gamepiece placement           # #
+#######################################
+
+    ##Test of removal or addition of pieces  
+    #for board in g.games:
+        #brd = g.fetch_board(board)
+        ##remove all queens
+        #for rank in range(len(brd)):
+            #for file in range(len(brd)[rank]):
+                #brd[rank][file].reset_piece()
+    #print(g)
         
+    ##N/A
 
-#######     TESTING     ######################
-# #for Queen Gamepiece placement           # #
+    ##Test of allowable moves
+    #for uuid in g.games.values():
+        #brd = g.fetch_board(uuid)
+        #sqr = Board.fetch_square(brd.brd,0,0)
+        #if sqr.has_piece():
+            #piece = sqr.get_piece()
+            #if Board.fetch_square(brd.brd,0,6).has_piece():
+                #raise Exception('not a legal move')
+            #else:
+                #piece.move_queen(Board.fetch_square(brd.brd,0,6))
+
+   #for board in g.games.values():
+       #print(g.fetch_board(board))
+   
+   
+######     TESTING     ######################
+## Input/Output               # #
 ##############################################
 
-    #Test of removal or addition of pieces  
-    #N/A
+  ##display the Move History 
+    #for board in games:
+        #print(g.fetch_board(board).game_summary())
 
-    #Test of allowable moves
-    for uuid in g.games.values():
-        brd = g.fetch_board(uuid)
-        sqr = Board.fetch_square(brd.brd,0,0)
-        if sqr.has_piece():
-            piece = sqr.get_piece()
-            if Board.fetch_square(brd.brd,0,6).has_piece():
-                raise Exception('not a legal move')
-            else:
-                piece.move_queen(Board.fetch_square(brd.brd,0,6))
-
-    for board in g.games.values():
-        print(g.fetch_board(board))
-    
-    
 #######     TESTING     ######################
-# # Input/Output               # #
+## Solutions Algorithms               # #
 ##############################################
+    #for game in g.games.values():
+        #if MODE_GAME == 1:
+            #if DEBUG:
+                #print("Solving...")
+            #Solutions.solveNQ(games[uuid])
+            #print(g)
 
-   #display the Move History 
-    # for board in games:
-        # print(g.fetch_board(board).game_summary())
+       ## elif MODE_GAME == 2:
+           ## Board.setup_queens(games[uuid])
+     
+       ##Print the empty boards
+        #print(g.fetch_board(uuid))
+       ##test move a piece
+       ## g.fetch_board(uuid).brd[0][0].move_piece(1,1)
 
-    
-#######     TESTING     ######################
-# # Solutions Algorithms               # #
-##############################################
-    # for game in games:
-        # if MODE_GAME == 1:
-            # if DEBUG:
-                # print("Solving...")
-            # Solutions.solveNQ(games[uuid])
-            # print(g)
-
-        # elif MODE_GAME == 2:
-            # Board.setup_queens(games[uuid])
-      
-
-
-        #Print the empty boards
-        # print(g.fetch_board(uuid))
-        #test move a piece
-        # g.fetch_board(uuid).brd[0][0].move_piece(1,1)
-
-        #Solve them
-        # Solutions.solveNQ(g.fetch_board(uuid).brd)
+       ##Solve them
+       ## Solutions.solveNQ(g.fetch_board(uuid).brd)
 
 main()
 
