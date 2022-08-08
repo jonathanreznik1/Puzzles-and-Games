@@ -20,7 +20,7 @@ import sys
 # python 8 queens problem
 
 #probably combine these?
-DEBUG = True
+DEBUG = False
 CLI_MODE = True
 MODE_GAME = 2
 
@@ -140,22 +140,11 @@ class Board():
 
     def __repr__(self):
         my_repr = ''
-        if CLI_MODE:
-            chess_repr = "Chessboard (CLI) Representation:\n"
-            if self.b_solved:
-                chess_repr += "Board Solved!\n"
-            rank = self.b_dim
-            for i in range(self.b_dim):
-                file = 'A'
-                if i > 0:
-                    rank -= 1
-                    chess_repr += "\n"
-                for j in range(self.b_dim):
-                    if j > 0:
-                        file = chr(ord(file) + 1)
-                    chess_repr += file + str(rank) +':'+ str(self.brd[i][j])[-3:-1]+"\t"
-            chess_repr += "\n"
-            my_repr += chess_repr
+        if self.b_solved:
+            my_repr += "Board Solved!\n"
+            my_repr += CLI.ShowBoard()
+        elif CLI_MODE:
+            my_repr += CLI.ShowBoard(self)
         if DEBUG:
             my_repr += "Data Representation:\n" + "".join(map(''.join,str(Game.games[self.b_id].brd))) + "\n"
         return my_repr
@@ -185,6 +174,26 @@ class Game():
         for uuid in Game.games:
             my_str += self.fetch_board(uuid).__str__()
         return my_str
+
+class CLI():
+    def __init__(self):
+        return
+
+    @staticmethod
+    def ShowBoard(board):
+        chess_repr = "Chessboard (CLI Mode):\n"
+        rank = board.b_dim
+        for i in range(board.b_dim):
+            file = 'A'
+            if i > 0:
+                rank -= 1
+                chess_repr += "\n"
+            for j in range(board.b_dim):
+                if j > 0:
+                    file = chr(ord(file) + 1)
+                chess_repr += file + str(rank) +':'+ str(board.brd[i][j])[-3:-1]+"\t"
+        chess_repr += "\n"
+        return chess_repr
 
 
 def main():
