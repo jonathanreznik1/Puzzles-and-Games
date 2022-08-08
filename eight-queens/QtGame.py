@@ -37,10 +37,10 @@ class ChessBoard(Board,QtWidgets.QWidget):
         self.setAcceptDrops(True)           
 
         ##Construct the board
-        for row in range(self.b_size):
+        for row in range(self.b_dim):
             layout.setRowStretch(row, 1)
             layout.setColumnStretch(row, 1)
-            for col in range(self.b_size):
+            for col in range(self.b_dim):
                 if col % 2 == 0 and row % 2 == 0:
                     layout.addWidget(ChessSquare(self,row,col,0), row, col)
                 elif col % 2 == 1 and row % 2 == 1:
@@ -51,8 +51,10 @@ class ChessBoard(Board,QtWidgets.QWidget):
                     layout.addWidget(ChessSquare(self,row,col,1), row, col)
 
         # add some pieces to the puzzle board
-        for rank in range(self.b_size):
-            layout.addWidget(ChessPiece("Qu",rank,rank,self), rank, rank)
+        for rank in range(self.b_dim):
+            widget = ChessPiece("QUEEN",rank,rank,self)
+            widget.set_square(self.brd[rank][rank])
+            layout.addWidget(widget, rank, rank)
 
     #Painting and Sizing
     def minimumSizeHint(self):
@@ -83,27 +85,53 @@ class ChessBoard(Board,QtWidgets.QWidget):
     def listLayoutChildWidgets(self):
         # print(self.layout.findChild(QWidget))
         for i in range(self.layout.count()):
-            print(self.layout.itemAt(i).widget().text())        
+            print(self.layout.itemAt(i).widget().text()) 
+
     def mousePressEvent(self, event):
-        self.listchildWidgets()
+        #self.listchildWidgets()
         # self.listLayoutChildWidgets()
         # self.listChildWidget()
-        return
-        piece = self.childAt(event.pos())
-        del piece
-        if (event.button() == QtCore.Qt.MouseButton.LeftButton
-              # and event.pos() 
-            # and iconLabel.geometry().contains(event.pos())
-            ):
-            if self.childAt(event.pos()).has_piece():
-                drag = QtGui.QDrag(self)
-                mimeData = QtCore.QMimeData()
-                mimeData.setImageData(QtGui.QImage(self.childAt(event.pos()).image_dest))
-                drag.setMimeData(mimeData)
-                drag.setPixmap(self.childAt(event.pos()).image)
-                dropAction = drag.exec()
-        elif (event.button() == QtCore.Qt.MouseButton.RightButton):
-            print(event.pos())    
+        #return
+        s = self.childAt(event.pos())
+        board = ChessGame.fetch_board(s)
+        try:
+            if s.is_piece():
+                x = s.p_location[0]    #file of Piece objects and rank of Square objects
+                y = s.p_location[1]    #file of Square objects and rank of Piece objects
+                #print(board.brd[y][x])
+                board.brd[y][x].reset_piece()
+                # print(board.brd[y][x].piece)
+                # s.update()
+                ChessGame.gui_games[s.b_id].repaint()
+                #print(ChessGame.gui_games[s.b_id][y][x])
+                #.update()
+                #ChessGame.gui_games[s.b_id][x][y].update()
+                #.get_parent_widget().update()
+                #print(str(board.brd))
+        except:
+            if not s.has_piece():
+                x = s.location[0]    #file of Piece objects and rank of Square objects
+                y = s.location[1]    #file of Square objects and rank of Piece objects
+                new = Piece("QUEEN",x,y,board)
+                new.set_square(board.brd[x][y])
+                #board.brd[x][y].set_piece("QUEEN")
+                #ChessGame.update()
+                print(ChessGame.gui_games[s.b_id])
+                #print(str(board.brd))
+
+        # if (event.button() == QtCore.Qt.MouseButton.LeftButton
+        #       # and event.pos() 
+        #     # and iconLabel.geometry().contains(event.pos())
+        #     ):
+        #     if self.childAt(event.pos()).has_piece():
+        #         drag = QtGui.QDrag(self)
+        #         mimeData = QtCore.QMimeData()
+        #         mimeData.setImageData(QtGui.QImage(self.childAt(event.pos()).image_dest))
+        #         drag.setMimeData(mimeData)
+        #         drag.setPixmap(self.childAt(event.pos()).image)
+        #         dropAction = drag.exec()
+        # elif (event.button() == QtCore.Qt.MouseButton.RightButton):
+        #     print(event.pos())    
 
 class ChessSquare(Square,QtWidgets.QWidget):
     def __init__(self,board,rank,file,color):
@@ -134,11 +162,11 @@ class ChessSquare(Square,QtWidgets.QWidget):
         qp.drawPixmap(0, 0, self.image.scaled(
             size, size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
 
-    # def __str__(self):
-    #     return str(self.get_piece_type()) + '@' + ''.join(map(str,(chr(ord('A') + (Square.fetch_board(self).b_size - 1) - self.location[0]),Square.fetch_board(self).b_size - self.location[1])))
+    def __str__(self):
+        return str(self.piece.p_type) + '@' + ''.join(map(str,(chr(ord('A') + (Square.fetch_board(self).b_size - 1) - self.location[0]),Square.fetch_board(self).b_size - self.location[1])))
 
-    # def __repr__(self):
-        # return str(self.piece_type) + '@' + ''.join(map(str,(chr(ord('A') + (self.fetch_board(self).b_size - 1) - self.location[0]),self.fetch_board(self).b_size - self.location[1])))
+    def __repr__(self):
+        return str(self.piece.p_type) + '@' + ''.join(map(str,(chr(ord('A') + (self.fetch_board(self).b_size - 1) - self.location[0]),self.fetch_board(self).b_size - self.location[1])))
 
     # def mousePressEvent(self, event):
     #     if event.button() == QtCore.Qt.MouseButton.LeftButton:
@@ -187,6 +215,9 @@ class ChessPiece(Piece,QtWidgets.QLabel):
         qp.drawPixmap(0 + size // 4, 0 + size // 4, self.image.scaled(
             size // 2, size // 2, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
 
+    def get_parent_widet(self):
+       return 
+
     # def mousePressEvent(self, event):
         # if (event.button() == QtCore.Qt.MouseButton.LeftButton
               # # and event.pos() 
@@ -201,21 +232,25 @@ class ChessPiece(Piece,QtWidgets.QLabel):
         # elif (event.button() == QtCore.Qt.MouseButton.RightButton):
             # print(event.pos())
 
-    def dragEnterEvent(self, e):
-        e.accept()
+    # def dragEnterEvent(self, e):
+    #     e.accept()
 
-    def dropEvent(self, e):
-        pos = e.pos()
-        widget = e.source()
+    # def dropEvent(self, e):
+    #     pos = e.pos()
+    #     widget = e.source()
         
-        self.get_square().set_piece("Qu")
-        # position = e.position()
-        # self.image.move(position.toPoint())
-        e.setDropAction(QtCore.Qt.DropAction.MoveAction)
-        e.accept()        
+    #     self.get_square().set_piece("Qu")
+    #     # position = e.position()
+    #     # self.image.move(position.toPoint())
+    #     e.setDropAction(QtCore.Qt.DropAction.MoveAction)
+    #     e.accept()        
 
+    def __str__(self):
+        return "Qu"
 
-
+    def __repr__(self):
+        my_repr = "Piece"
+        return my_repr
     # def paintEvent(self, event):
     #     qp = QtGui.QPainter(self)
     #     rect = self.layout().geometry()
@@ -224,9 +259,13 @@ class ChessPiece(Piece,QtWidgets.QLabel):
 
 
 class ChessGame(Game,QtWidgets.QMainWindow):
+    gui_games = dict()
+    
     def __init__(self):
         Game.__init__(self)
         self.board = ChessBoard()
+        self.gui_newgame(self.board)
+        #self.games[self.board.b_id]=self.board
         self.initUI()
 
     def initUI(self):
@@ -242,6 +281,13 @@ class ChessGame(Game,QtWidgets.QMainWindow):
         quit.clicked.connect(QtWidgets.QApplication.quit)
         layout.addWidget(quit)
 
+    def gui_newgame(self,gui_board):
+        self.games[gui_board.b_id] = gui_board
+        self.gui_games[gui_board.b_id] = gui_board
+
+    @staticmethod
+    def fetch_board(item):
+        return ChessGame.gui_games[item.b_id]
 
 
 def _enum(obj, name):
