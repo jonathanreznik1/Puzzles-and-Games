@@ -133,3 +133,6 @@ dmypy.json
 
 #Miscellaneous testing
 test1234/
+
+# Wing IDE projects
+*.wpr
