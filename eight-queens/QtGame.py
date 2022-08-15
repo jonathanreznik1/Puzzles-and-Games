@@ -1,4 +1,4 @@
-from Queens import Square, Piece, Board, Game
+from QueensNew import Square, Piece, Board, Game
 import Solutions
 import sys
 import os
@@ -40,7 +40,7 @@ class ChessBoard(Board,QtWidgets.QWidget):
         for row in range(self.b_dim):
             layout.setRowStretch(row, 1)
             layout.setColumnStretch(row, 1)
-            for col in range(self.b_dim):
+            for col in range(len(self.brd[0])):
                 if col % 2 == 0 and row % 2 == 0:
                     layout.addWidget(ChessSquare(self,row,col,0), row, col)
                 elif col % 2 == 1 and row % 2 == 1:
@@ -50,11 +50,12 @@ class ChessBoard(Board,QtWidgets.QWidget):
                 elif col % 2 == 0 and row % 2 == 1:
                     layout.addWidget(ChessSquare(self,row,col,1), row, col)
 
-        # add some pieces to the puzzle board
-        for rank in range(self.b_dim):
-            widget = ChessPiece("QUEEN",rank,rank,self)
-            widget.set_square(self.brd[rank][rank])
-            layout.addWidget(widget, rank, rank)
+        # # add some pieces to the puzzle board
+        # for rank in range(len(self.brd)):
+            # widget = ChessPiece("Qu",rank,rank,self)
+            # self.brd[rank][rank].set_piece(widget)
+            # # widget.set_square(self.brd[rank][rank])
+            # layout.addWidget(widget, rank, rank)
 
     #Painting and Sizing
     def minimumSizeHint(self):
@@ -92,8 +93,10 @@ class ChessBoard(Board,QtWidgets.QWidget):
         # self.listLayoutChildWidgets()
         # self.listChildWidget()
         #return
+
         s = self.childAt(event.pos())
         board = ChessGame.fetch_board(s)
+
         try:
             if s.is_piece():
                 x = s.p_location[0]    #file of Piece objects and rank of Square objects
@@ -110,13 +113,15 @@ class ChessBoard(Board,QtWidgets.QWidget):
                 #print(str(board.brd))
         except:
             if not s.has_piece():
-                x = s.location[0]    #file of Piece objects and rank of Square objects
-                y = s.location[1]    #file of Square objects and rank of Piece objects
-                new = Piece("QUEEN",x,y,board)
-                new.set_square(board.brd[x][y])
+                rank,file = s.location
+                sq = board.brd[rank][file]
+                new = Piece("Qu",sq,board)
+                sq.set_piece(new)
+                # s.update()
+                # new.set_square(board.brd[x][y])
                 #board.brd[x][y].set_piece("QUEEN")
-                #ChessGame.update()
-                print(ChessGame.gui_games[s.b_id])
+                # ChessGame.gui_games[s.b_id].update()
+                # print(ChessGame.gui_games[s.b_id])
                 #print(str(board.brd))
 
         # if (event.button() == QtCore.Qt.MouseButton.LeftButton
@@ -199,7 +204,7 @@ class ChessSquare(Square,QtWidgets.QWidget):
 
 class ChessPiece(Piece,QtWidgets.QLabel):
     def __init__(self,type,file,rank,board):
-        Piece.__init__(self,type,file,rank,board)
+        Piece.__init__(self,type,board.brd[rank][file],board)
         self.image_dest = os.path.join(os.path.dirname(__file__), '..', 'images', 'whitequeen.png')
         self.initUI()
     

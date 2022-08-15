@@ -31,11 +31,11 @@ class Piece():
         self.p_location = (file,rank)
         self.p_type = chesspiece
     
-    '''Assign piece to a square.        Args: self, square         Returns: None   
-        '''
+    """ Assign piece to a square. """
     def set_square(self, square):
         square.piece = self
 
+    """ Boolean check for piece type """
     def is_piece(self):
         if self.p_type is None:
             return False
@@ -46,35 +46,33 @@ class Piece():
         # rank = self.location[1]
         # return games[self.b_id].brd[rank][file]            
         
-    '''Moves piece to an empty square.        Args: self, square        Returns:  (x,y) location '''
-    def move_queen(self,square):
+    # """Moves piece to an empty square and returns tuple"""
+    # def move_queen(self,square):
     
-        #Get the Board
-        B = Game.fetch_board(self.b_id)          
-        # B = games[self.b_id]
-        x,y = square.get_location()
-        sqr = Board.fetch_square(B.brd,x,y)
+        # B = Game.fetch_board(self.b_id)     # Get the Board
+        # x,y = square.get_location()         # Get the location
+        # sqr = Board.fetch_square(B.brd,x,y) # Get the Square
 
-        #Check for piece and raise exception if so
-        if not sqr.has_piece():
+        # #Check for piece and raise exception if so
+        # if not sqr.has_piece():
             
-            #Store the current location in sq
-            file = self.p_location[0]
-            rank = self.p_location[1]
-            sq = B.brd[file][rank]
+            # #Store the current location in sq
+            # file = self.p_location[0]
+            # rank = self.p_location[1]
+            # sq = B.brd[file][rank]
             
-            #Move piece and add to move history
-            self.set_square(B.brd[x][y])
-            Game.move_history[self.b_id].append([self.p_type,self.p_location,(x,y)])
-            self.p_location = (x,y)
+            # #Move piece and add to move history
+            # self.set_square(B.brd[x][y])
+            # Game.move_history[self.b_id].append([self.p_type,self.p_location,(x,y)])
+            # self.p_location = (x,y)
 
-            #Cleanup the old square and return the new location
-            sq.reset_piece()
-            return self.p_location
+            # #Cleanup the old square and return the new location
+            # sq.reset_piece()
+            # return self.p_location
             
-        else:
-            raise Exception("Illegal Move, piece already exists there.")
-            return False  
+        # else:
+            # raise Exception("Illegal Move, piece already exists there.")
+            # return False  
     
     '''String override method'''
     def __str__(self):
@@ -94,7 +92,9 @@ class Square():
         return True
 
     def reset_piece(self):
-        self.piece = Piece(None,self.location[1],self.location[0],Game.fetch_board(self.b_id))
+        rank,file = self.location
+        B = Game.fetch_board(self.b_id)
+        self.piece = Piece(None,file,rank,B)
         
     def get_piece(self):
         return self.piece
@@ -280,3 +280,19 @@ def main():
 
 main()
 
+
+
+
+    # def get_rank(self):
+    # """Show rank of square. Ret: Integer """
+        # return self.get_board_size() - self.location[0]
+
+    # def get_file(self):
+    # """Show file of square. Returns: Character"""
+        # return chr(ord('A')+self.location[1])
+    
+    # def get_location(self):
+        # """ Getter for square location.  Ret: Tuple """            
+        # rank = self.location[0]
+        # file = self.location[1]
+        # return rank,file

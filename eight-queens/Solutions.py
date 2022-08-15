@@ -8,27 +8,19 @@ DEBUG = False
 # global N
 # N = 4
 
-
-def board_solve(arg):
-    if arg == 1:
-        board_solved_backtracking(self)
-    elif arg == 2:
-        board_solved_bruteforce(self)
-
-def board_solved_backtracking(self):
-    return False
-
-def board_solved_brute(self):
-    # O(n) algorithm for rows
-    for row in games[self.b_id]:
+def checkrows():
+    for row in self:
         if [x.has_piece() for x in row].count(True) > 1:
             print("unsolved - row with 2 pieces")
             return False
-    # Algorithm for columns
-    for i in range(len(games[self.b_id])):
-        if [col[i].has_piece() for col in games[self.b_id]].count(True) > 1:
-            print("unsolved - col with 2 pieces")
-            return False
+
+def checkcols():
+    # # Algorithm for columns
+    # for i in range(len(games[self.b_id])):
+        # if [col[i].has_piece() for col in games[self.b_id]].count(True) > 1:
+            # print("unsolved - col with 2 pieces")
+            # return False
+    return True
 
 def checkdiagonals():
 # Algorithm to check diagonals
@@ -44,13 +36,13 @@ def checkdiagonals():
 
 
 
-def printSolution(board):
-    if DEBUG:
-        print("printSolution called from helper module Solutions.py")
-        for i in range(len(board)):
-            for j in range(len(board)):
-                print(board[i][j], end = " ")
-        print(board)
+# def printSolution(board):
+    # if DEBUG:
+        # print("printSolution called from helper module Solutions.py")
+        # for i in range(len(board)):
+            # for j in range(len(board)):
+                # print(board[i][j], end = " ")
+        # print(board)
 
 
 # A utility function to check if a queen can
@@ -78,6 +70,7 @@ def isSafe(board, row, col):
             return False
 
     return True
+
 
 def solveNQUtil(board, col):
     
@@ -226,3 +219,31 @@ def solveNQ(board):
 
 # # This code is contributed by SHUBHAMSINGH10
 
+
+
+    # @staticmethod
+    # def solveNQRecursive(board, col):
+        # """ Recursive solution with backtracking to solve board. Ret: Board """
+        # N = len(board.brd)
+        # # Base Case
+        # if (col >= N):
+            # return board
+            
+        # for i in range(N):
+            # continue
+
+        # return board
+
+
+
+def board_solve(arg,b):
+    if arg == 1:
+        board_solved_backtracking(b)
+    elif arg == 2:
+        board_solved_brute(b)
+
+def board_solved_backtracking(self):
+    return False
+
+def board_solved_brute(self):
+    return True
