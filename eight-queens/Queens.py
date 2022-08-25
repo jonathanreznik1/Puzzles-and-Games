@@ -1,298 +1,238 @@
 import uuid
 import sys
 
-#PROJECT TODO LIST: 
-# 1) Queens.py
-#   a. simplify the program
-#   b. remove global vars if possible
-#   c. cleanup the unused functions
-# 2) QtGame.py
-#   a. introduce gui elements
-#   b. Interactive cycling through the solutions
-# 3) Solutions.py
-#   a. Implement Backtracking algorithm
-#   b. Compare the efficiency of the two algorithms
-#   c. Expand on solutions introducing concurrency
-# 4) Other
-#   a.  using a file to store or check solutions
-#   b.  Create HINT feature with some AI or greedy algorithm
+# TODO:
+# 1) Finish commenting
+# 2) Add masking of paths
+# 3) Count moves made and show
+# 4) Alternate solutions mathematically
 
-# python 8 queens problem
 
-#probably combine these?
+# Flags
 DEBUG = False
 CLI_MODE = True
-MODE_GAME = 2
-
+MOVES = 0
 
 class Piece():
-    def __init__(self, chesspiece, file, rank, board):
+    """ Class for new pieces """
+
+    def __init__(self, p, square, board):
+        """ Constructor method for class. Ret: None """
         self.b_id = board.b_id
-        self.p_location = (file,rank)
-        self.p_type = chesspiece
+        self.p_location = square.location
+        self.p_type = p
     
-    """ Assign piece to a square. """
-    def set_square(self, square):
-        square.piece = self
+    def fetch_square(self):
+        """ The static method to fetch square from a board. Ret: Square """
+        brd = Game.fetch_board(self.b_id)
+        rank, file = self.p_location
+        return brd[rank][file]
 
-    """ Boolean check for piece type """
-    def is_piece(self):
-        if self.p_type is None:
-            return False
-        return True
-
-    # def fetch_square(self):
-        # file = self.location[0]
-        # rank = self.location[1]
-        # return games[self.b_id].brd[rank][file]            
-        
-    # """Moves piece to an empty square and returns tuple"""
-    # def move_queen(self,square):
-    
-        # B = Game.fetch_board(self.b_id)     # Get the Board
-        # x,y = square.get_location()         # Get the location
-        # sqr = Board.fetch_square(B.brd,x,y) # Get the Square
-
-        # #Check for piece and raise exception if so
-        # if not sqr.has_piece():
-            
-            # #Store the current location in sq
-            # file = self.p_location[0]
-            # rank = self.p_location[1]
-            # sq = B.brd[file][rank]
-            
-            # #Move piece and add to move history
-            # self.set_square(B.brd[x][y])
-            # Game.move_history[self.b_id].append([self.p_type,self.p_location,(x,y)])
-            # self.p_location = (x,y)
-
-            # #Cleanup the old square and return the new location
-            # sq.reset_piece()
-            # return self.p_location
-            
-        # else:
-            # raise Exception("Illegal Move, piece already exists there.")
-            # return False  
-    
-    '''String override method'''
     def __str__(self):
-        if self.p_type == "QUEEN":
+        """ String override method. Ret: String """
+        if self.p_type == "Q":
+            # show piece
             return "Qu"
-        
-
+        elif self.p_type == None:
+            # if no piece exists show str for square object
+            return fetch_square(self)
+           
+           
 class Square():
-    def __init__(self, board, rank, file):
-        self.b_id = board.b_id
-        self.piece = Piece(None,file,rank,board)
-        self.location = (rank, file)                     #rank location[0], file location[1]
+    """ Class for new squares """
 
+    def __init__(self, board, rank, file):
+        """ Constructor method for a square. Ret: None """
+        self.b_id = board.b_id
+        self.location = (rank, file)
+        self.piece = Piece(None,self,board)     # empty piece initially
+
+    def set_piece(self, piece):
+        """ Assign a new piece object to square. None """
+        self.piece = piece
+       
     def has_piece(self):
+        """ Checks for piece. Ret: Boolean """
         if self.piece.p_type is None:
             return False
         return True
 
-    def reset_piece(self):
-        rank,file = self.location
-        B = Game.fetch_board(self.b_id)
-        self.piece = Piece(None,file,rank,B)
+    def reset_square(self):
+        """ Removes and places new piece object in square . Ret: None """
+        B = Game.fetch_board(self.b_id)     # grab the board
+        self.set_piece(Piece(None,self,B))
         
-    def get_piece(self):
-        return self.piece
-       
-    '''Show rank of square        Args: self        Returns: integer value from 1 to b_size '''
-    def get_rank(self):
-        return self.get_board_size() - self.location[0]
-
-    '''Show file of square        Args: self        Returns: character from A to ?'''
-    def get_file(self):
-        return chr(ord('A')+self.location[1])
-                
-    def get_location(self):
-        return self.location[0],self.location[1]
-
     def __str__(self):
-        if self.piece.p_type is None:
+        """ String override method. Ret: String """
+        rank, file = self.location      # grab rank and file
+        if not self.has_piece():
+            # square is unoccupied by a piece
             return ""
-        return "%s%s" % (self.location[1], self.location[0]) + ":" + "%s\t" % (self.piece)
+        # square has piece output
+        return "%s%s" % (file, rank) + ":" + "%s\t" % (self.piece)
 
     def __repr__(self):
+        """ Representation override method. Ret: String """
         if self.has_piece():
+            # unoccupied square
+            return "Queen" + chr(ord("A")+self.location[1]) + "@" + str(self.location[1]) + str(self.location[0])
             return self.piece.p_type
-        return "Square"
-        
-class Board():
-    def __init__(self, dimensions):
-        self.b_dim = dimensions
-        self.b_solved = False
-        self.b_id = uuid.uuid1()        #assigns a unique id
-        self.brd = [[Square(self,i,j) for j in range(dimensions)] for i in range(dimensions)]       
+        # occupied square
+        return "Square@" + str(self.location[1]) + str(self.location[0])
 
-    '''The static Board.fetch_square() method returns a Square object'''
-    @staticmethod
-    def fetch_square(board,rank,file):
-        return board[rank][file]
-    
-    '''The static Board.setup_queens() method places Queen pieces on the diagonal of squares'''
-    @staticmethod
-    def setup_queens(board):
-        for i,item in enumerate(board.brd):
-            item[0].piece = Piece("QUEEN",i,i,board)
 
-    def __repr__(self):
-        my_repr = ''
-        if self.b_solved:
-            my_repr += "Board Solved!\n"
-            my_repr += CLI.ShowBoard()
-        elif CLI_MODE:
-            my_repr += CLI.ShowBoard(self)
-        if DEBUG:
-            my_repr += "Data Representation:\n" + "".join(map(''.join,str(Game.games[self.b_id].brd))) + "\n"
-        return my_repr
-        
 class Game():
+    """ Class with a dictionary and static methods to create board games """
     games = dict()
-    move_history = {}
-
-    def __init__(self):
-        self.b_game_mode = MODE_GAME    # 1,2  for auto/interactive
-
-    '''The static Game.fetch_board() method returns a Board object'''
+    
     @staticmethod
     def fetch_board(uuid):
-        return Game.games[uuid] 
-        
-    def new_game(self,board):
-        if DEBUG:
-            print("newboard: " + str(board.b_id))
-        
-        self.games[board.b_id] = board           #map board to games
+        """ The static method to fetch a board based on board id Ret: Board """
+        return Game.games[uuid]     # calls class variable games which is {}
 
-        self.move_history[board.b_id] = []
-        
+    @staticmethod
+    def new_game(board):        
+        """ The static method to add a new board to games Ret: None"""
+        # The games {} gets a new entry with key: uuid and value: Board object
+        Game.games[board.b_id] = board        
+   
     def __str__(self):
+        """ String override method. Ret: String """
         my_str = ""
+        # Loop through {} with keys and call __str__ method on each value
         for uuid in Game.games:
             my_str += self.fetch_board(uuid).__str__()
-        return my_str
+        return my_str        
+
+
+class Board():
+    """ Class for new boards """
+
+    def __init__(self, dims):
+        """ Constructor method for the board. Ret: None """
+
+        # new board gets assigned a uuid and dimension
+        self.b_id = uuid.uuid1()
+        self.b_dim = dims
+        self.b_solved = False
+
+        # data structure
+        self.brd = [[Square(self,i,j) for j in range(dims)] for i in range(dims)]               
+        if DEBUG:
+            print("newboard: " + str(self.b_id))       
+        
+    def __repr__(self):
+        """ Representation override method. Ret: String """
+        my_repr = ''
+        if self.b_solved:
+            my_repr += "Board Solved in %i moves!\n" % (MOVES)
+        if CLI_MODE:
+            my_repr += CLI.ShowBoard(self)
+        if DEBUG:
+            my_repr += "Data Representation:\n" + "".join(map(''.join,str(
+                Game.games[self.b_id].brd))) + "\n"
+        return my_repr
+
+
+class BoardSolution():
+    """ Class with static methods to solve boards in the games """
+
+    @staticmethod
+    def Solve(board):
+        """ Static method to solve a board. Ret: Boolean """    
+        if BoardSolution.SolveRemaining(board, 0) == False:
+            print("No solution")
+            return False
+        board.b_solved = True
+        return board.b_solved        
+
+    @staticmethod
+    def SolveRemaining(board,col):
+        """ Recursive method for solving the n queens board. Ret: Boolean """  
+        global MOVES
+        if col >= board.b_dim:
+            return True
+        
+        for row in range(board.b_dim):
+            MOVES += 1
+            if BoardSolution.isSafe(board.brd, row, col):
+                sq = board.brd[row][col]
+                q = Piece("Q",sq,board)
+                sq.set_piece(q)
+                
+                if BoardSolution.SolveRemaining(board, col + 1) == True:
+                    return True
+                sq.reset_square()
+        return False
+    
+    @staticmethod
+    def isSafe(brd, row, col):
+        """ Constructor method for the square. Ret: None """
+
+        # 
+        for i in range(col):
+            if brd[row][i].has_piece():
+                return False
+
+        # 
+        for i, j in zip(range(row, -1, -1),
+                        range(col, -1, -1)):
+            if brd[i][j].has_piece():
+                return False
+
+        # 
+        for i, j in zip(range(row, len(brd), 1),
+                        range(col, -1, -1)):
+            if brd[i][j].has_piece():
+                return False
+        return True
+
 
 class CLI():
-    def __init__(self):
-        return
+    """ Class of static methods for transforming boards to pretty CLI output"""
 
     @staticmethod
     def ShowBoard(board):
+        """ Static method to print boards and pieces to cli. Ret: String """
         chess_repr = "Chessboard (CLI Mode):\n"
-        rank = board.b_dim
-        for i in range(board.b_dim):
+        b_dim = board.b_dim                 #TODO: Fix if isn't square
+        rank = b_dim
+        for i in range(b_dim):
             file = 'A'
             if i > 0:
                 rank -= 1
                 chess_repr += "\n"
-            for j in range(board.b_dim):
+            for j in range(b_dim):
                 if j > 0:
                     file = chr(ord(file) + 1)
-                chess_repr += file + str(rank) +':'+ str(board.brd[i][j])[-3:-1]+"\t"
-        chess_repr += "\n"
+                chess_repr += file + str(rank) +':'+ str(board.brd[i][j])[-3:
+                    -1]+"\t"
+        chess_repr += "\n"  
         return chess_repr
 
 
 def main():
+
+    # new game
     g = Game()
-
-#######     TESTING     ######################
-## game setup of Board.setup_queens         ##
-##############################################
-
-   ##Create three new boards of different sizes
-    g.new_game(Board(8))
-    g.new_game(Board(10))
-    g.new_game(Board(12))
-
-   ##Show the CLI output of squares with no pieces
+   
+    # three new boards
+    b1 = Board(8)
+    # b2 = Board(10)
+    # b3 = Board(12)
+    g.new_game(b1)
+    # g.new_game(b2)
+    # g.new_game(b3)
+    
     print(g)
    
-    ##Call setup_queens()
+    # solve each of the boards
     for uuid in g.games:
-        Board.setup_queens(g.fetch_board(uuid))
+        b = g.fetch_board(uuid)
+        BoardSolution.Solve(b)
+
     print(g)
-        #print(g.fetch_board(uuid))
 
-       
-
-#######     TESTING     ###############
-##    Gamepiece placement           # #
-#######################################
-
-    ##Test of removal or addition of pieces  
-    #for board in g.games:
-        #brd = g.fetch_board(board)
-        ##remove all queens
-        #for rank in range(len(brd)):
-            #for file in range(len(brd)[rank]):
-                #brd[rank][file].reset_piece()
-    #print(g)
-        
-    ##N/A
-
-    ##Test of allowable moves
-    #for uuid in g.games.values():
-        #brd = g.fetch_board(uuid)
-        #sqr = Board.fetch_square(brd.brd,0,0)
-        #if sqr.has_piece():
-            #piece = sqr.get_piece()
-            #if Board.fetch_square(brd.brd,0,6).has_piece():
-                #raise Exception('not a legal move')
-            #else:
-                #piece.move_queen(Board.fetch_square(brd.brd,0,6))
-
-   #for board in g.games.values():
-       #print(g.fetch_board(board))
-   
-   
-######     TESTING     ######################
-## Input/Output               # #
-##############################################
-
-  ##display the Move History 
-    #for board in games:
-        #print(g.fetch_board(board).game_summary())
-
-#######     TESTING     ######################
-## Solutions Algorithms               # #
-##############################################
-    #for game in g.games.values():
-        #if MODE_GAME == 1:
-            #if DEBUG:
-                #print("Solving...")
-            #Solutions.solveNQ(games[uuid])
-            #print(g)
-
-       ## elif MODE_GAME == 2:
-           ## Board.setup_queens(games[uuid])
-     
-       ##Print the empty boards
-        #print(g.fetch_board(uuid))
-       ##test move a piece
-       ## g.fetch_board(uuid).brd[0][0].move_piece(1,1)
-
-       ##Solve them
-       ## Solutions.solveNQ(g.fetch_board(uuid).brd)
 
 main()
 
-
-
-
-    # def get_rank(self):
-    # """Show rank of square. Ret: Integer """
-        # return self.get_board_size() - self.location[0]
-
-    # def get_file(self):
-    # """Show file of square. Returns: Character"""
-        # return chr(ord('A')+self.location[1])
-    
-    # def get_location(self):
-        # """ Getter for square location.  Ret: Tuple """            
-        # rank = self.location[0]
-        # file = self.location[1]
-        # return rank,file
