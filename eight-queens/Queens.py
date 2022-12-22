@@ -11,7 +11,7 @@ import sys
 # Flags
 DEBUG = False
 CLI_MODE = True
-MOVES = 0
+SOLVE_COUNT = 10
 
 class Piece():
     """ Class for new pieces """
@@ -35,7 +35,7 @@ class Piece():
             return "Qu"
         elif self.p_type == None:
             # if no piece exists show str for square object
-            return fetch_square(self)
+            return Piece.fetch_square(self)
            
            
 class Square():
@@ -108,63 +108,107 @@ class Game():
 class Board():
     """ Class for new boards """
 
+    b_dims = 8
+    b_id = uuid.uuid1()
+        
     def __init__(self, dims):
         """ Constructor method for the board. Ret: None """
-
         # new board gets assigned a uuid and dimension
-        self.b_id = uuid.uuid1()
-        self.b_dim = dims
-        self.b_solved = False
-
-        # data structure
-        self.brd = [[Square(self,i,j) for j in range(dims)] for i in range(dims)]               
+        # self.b_solved = False
+        self.MOVES = 0
+        self.solutions = []
+        self.brd = [[Square(self,i,j) for j in range(Board.b_dims)] for i in range(Board.b_dims)]               
+        # self.reset_board(self)
         if DEBUG:
-            print("newboard: " + str(self.b_id))       
+            print("newboard: " + str(Board.b_id))       
         
+    @staticmethod    # data structure
+    def reset_board(board):
+        board.brd = [[Square(board,i,j) for j in range(Board.b_dims)] for i in range(Board.b_dims)]
+        
+
     def __repr__(self):
         """ Representation override method. Ret: String """
         my_repr = ''
-        if self.b_solved:
-            my_repr += "Board Solved in %i moves!\n" % (MOVES)
+        # if self.b_solved:
+        if self.solutions:
+            my_repr += "Board Solved in %i moves!\n" % (self.MOVES)
         if CLI_MODE:
             my_repr += CLI.ShowBoard(self)
         if DEBUG:
             my_repr += "Data Representation:\n" + "".join(map(''.join,str(
-                Game.games[self.b_id].brd))) + "\n"
+                Game.games[Board.b_id].brd))) + "\n"
         return my_repr
 
+    def add_solution(board):
+        s = []
+        for j in range(Board.b_dims):
+            for i in range(Board.b_dims):
+                if board.brd[i][j].has_piece():
+                    s.append([i,j])
+        board.solutions.append(s)
 
-class BoardSolution():
-    """ Class with static methods to solve boards in the games """
+    def reset_move_count(board):
+        board.MOVES = 0
 
     @staticmethod
     def Solve(board):
         """ Static method to solve a board. Ret: Boolean """    
-        if BoardSolution.SolveRemaining(board, 0) == False:
-            print("No solution")
-            return False
-        board.b_solved = True
-        return board.b_solved        
+        global SOLVE_COUNT
+        while SOLVE_COUNT > 0:
+            if Board.SolveRemaining(board, 0) == False:
+                print("No solution")
+                return False
+            # board.b_solved = True
+            print(board)
+            SOLVE_COUNT -= 1
+            #register the board solution using a better method
+            board.add_solution()
+            board.reset_board(board)
+            board.reset_move_count()
+            # return board.b_solved  
+        return board.solutions      
+
+    def add_move(board):
+        board.MOVES += 1
 
     @staticmethod
     def SolveRemaining(board,col):
         """ Recursive method for solving the n queens board. Ret: Boolean """  
-        global MOVES
-        if col >= board.b_dim:
+        #global MOVES
+        if col >= board.b_dims:
             return True
         
-        for row in range(board.b_dim):
-            MOVES += 1
-            if BoardSolution.isSafe(board.brd, row, col):
+        for row in range(board.b_dims):
+            Board.add_move(board)
+            if Board.isSafe(board.brd, row, col):
                 sq = board.brd[row][col]
                 q = Piece("Q",sq,board)
                 sq.set_piece(q)
-                
-                if BoardSolution.SolveRemaining(board, col + 1) == True:
+                while SOLVE_COUNT < 10:
+                    if board.found_already():
+                        #  print("hello")
+                         continue
+                if Board.SolveRemaining(board, col + 1) == True:
                     return True
                 sq.reset_square()
         return False
-    
+
+    def found_already(board):
+        if board.solutions is False:
+            return
+        for solved in board.solutions:
+            return board.match_boards(board,solved)
+
+    @staticmethod
+    def match_boards(board1,board2):
+        for i in range(Board.b_dims):
+            for j in range(Board.b_dims):
+                if board1.brd[i][j].has_piece():
+                    if [i,j] not in board2:
+                        return False
+        return True
+
     @staticmethod
     def isSafe(brd, row, col):
         """ Constructor method for the square. Ret: None """
@@ -195,14 +239,14 @@ class CLI():
     def ShowBoard(board):
         """ Static method to print boards and pieces to cli. Ret: String """
         chess_repr = "Chessboard (CLI Mode):\n"
-        b_dim = board.b_dim                 #TODO: Fix if isn't square
-        rank = b_dim
-        for i in range(b_dim):
+        b_dims = board.b_dims                 #TODO: Fix if isn't square
+        rank = b_dims
+        for i in range(b_dims):
             file = 'A'
             if i > 0:
                 rank -= 1
                 chess_repr += "\n"
-            for j in range(b_dim):
+            for j in range(b_dims):
                 if j > 0:
                     file = chr(ord(file) + 1)
                 chess_repr += file + str(rank) +':'+ str(board.brd[i][j])[-3:
@@ -217,7 +261,7 @@ def main():
     g = Game()
    
     # three new boards
-    b1 = Board(8)
+    b1 = Board(6)
     # b2 = Board(10)
     # b3 = Board(12)
     g.new_game(b1)
@@ -229,9 +273,12 @@ def main():
     # solve each of the boards
     for uuid in g.games:
         b = g.fetch_board(uuid)
-        BoardSolution.Solve(b)
+        Board.Solve(b)
 
     print(g)
+
+    # for b in b1.solutions:
+    #     print(b)
 
 
 main()
