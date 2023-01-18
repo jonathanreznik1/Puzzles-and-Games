@@ -15,11 +15,11 @@ DEBUG = True
 CLI_MODE = True
 
 # Other Input
-BOARDS = (10, 12, 14)  # enter a tuple here of the boards to solve
+BOARDS = (8,)  # enter a tuple here of the boards to solve
 # NOTE: The order of solutions found will be the same each time so rather than
 # include the same number twice (for now!) use the next param to alter the
 # number of solutions attempted.
-SOLVE = (9, 2, 1)  # enter the max number of solutions to find in each board
+SOLVE = (93,)  # enter the max number of solutions to find in each board
 
 # TODO:
 # Add masking paths in algorithm and other efficiencies
