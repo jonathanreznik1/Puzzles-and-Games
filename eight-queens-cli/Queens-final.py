@@ -19,7 +19,7 @@ BOARDS = (8,)  # enter a tuple here of the boards to solve
 # NOTE: The order of solutions found will be the same each time so rather than
 # include the same number twice (for now!) use the next param to alter the
 # number of solutions attempted.
-SOLVE = (93,)  # enter the max number of solutions to find in each board
+SOLVE = (-1,-1)  # enter the max number of solutions to find in each board
 
 # TODO:
 # Add masking paths in algorithm and other efficiencies
@@ -107,9 +107,7 @@ class Board():
         self.b_solution_count = 0
 
         self.fresh_board()
-        if DEBUG:
-            print("new board: " + str(self.id))
-
+        
     def fresh_board(self):
         self.brd = [[Square(self, i, j) for i in range(self.b_dims)]
                     for j in range(self.b_dims)]
@@ -149,21 +147,22 @@ class Board():
         global SOLVE
         i = 0
 
-        while i < SOLVE[board.b_index]:
+        while i < SOLVE[board.b_index] or SOLVE[board.b_index]== -1:
             if Board.SolveRemaining(board, 0) == False:
                 print("No solution")
-                return False
+                return board.solutions
 
             # print solved out
             board.b_solved = True
+            board.b_solution_count += 1
             if CLI_MODE:
                 print(board)
 
             # store in the solutions object
-            Board.solutions[str(board.b_dims)+str(i)
+            Board.solutions[str(board.b_dims)+'-'+str(i)
                             ] = Board.recordsolution(board)
 
-            if i < SOLVE[board.b_index] - 1:
+            if i < SOLVE[board.b_index] - 1 or SOLVE[board.b_index] == -1:
                 board.fresh_board()
                 board.reset_move_count()
             i += 1
@@ -223,6 +222,11 @@ class Board():
                 if board.brd[j][i].has_piece():
                     s.append([j, i])  # append file,rank to solution set
         return s
+
+    @staticmethod
+    def show_solutions():
+        for i in Board.solutions:
+            print(i)
 
     def reset_move_count(self):
         """Resets the move count"""
@@ -285,19 +289,23 @@ def main():
     # solve each of "the boards"
     for uuid in g.games:
         b = g.fetch_board(uuid)
-        Board.Solve(b)
+        s = Board.Solve(b)
 
     # show the summary output
-    for s in Board.solutions.values():
-        print(Board.ShowSolution(s))
+    # for s in Board.solutions.values():
+    #     b.b_solution_count += 1
+    #     print(Board.ShowSolution(s))
 
     # with debug mode on changes to CLI_MODE to show last solved
     if DEBUG:
         global CLI_MODE
         CLI_MODE = True
         # print(g)
-        print("\n\nLast used board ", end="")
         print(b)
+        print(str(b.b_solution_count) + " solutions")
+        b.show_solutions()
 
+    i = input("Select a solution to show by typing in the identifying solution number.")
+    print(Board.ShowSolution(s[i]))
 
 main()
